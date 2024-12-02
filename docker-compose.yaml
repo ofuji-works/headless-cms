@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
+      args:
+        PORT: ${APP_PORT}
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+

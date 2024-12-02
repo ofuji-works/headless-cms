@@ -2,7 +2,27 @@
 name = "headless-cms"
 version = "0.1.0"
 edition = "2021"
+author = "ofuji.works@gmail.com"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "app"
+path = "src/bin/app.rs"
+
+[workspace]
+members = [
+  "application",
+  "domain",
+  "infrastructure",
+  "interface",
+]
+
+[workspace.dependencies]
+anyhow = "1.0.93"
+rstest = "0.23.0"
+tokio = { version = "1.41.1", features = ["full"] }
+infrastructure = { path = "./infrastructure" }
 
 [dependencies]
+tokio.workspace = true
+infrastructure.workspace = true
+

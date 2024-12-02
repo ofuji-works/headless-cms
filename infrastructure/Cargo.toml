@@ -1,0 +1,10 @@
+[package]
+name = "infrastructure"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7.9"
+anyhow.workspace = true
+rstest.workspace = true
+tokio.workspace = true
