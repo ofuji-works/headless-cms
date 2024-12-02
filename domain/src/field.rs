@@ -1,13 +1,24 @@
 use anyhow::{bail, Result};
 
+pub enum FieldType {
+    ShortText,
+    LongText,
+    RichText,
+    Number,
+    Boolean,
+    DateTime,
+    Media,
+}
+
 pub struct Field {
-    name: String,
-    field_id: String,
-    is_required: bool,
+    pub name: String,
+    pub field_id: String,
+    pub field_type: FieldType,
+    pub is_required: bool,
 }
 
 impl Field {
-    pub fn try_new (name: String, field_id: String, is_required: bool) -> Result<Self> {
+    pub fn try_new (name: String, field_id: String, field_type: FieldType, is_required: bool) -> Result<Self> {
 
         if name.len() > 50 {
             bail!("The maximum allowed length is 50 characters.")
@@ -20,6 +31,7 @@ impl Field {
         Ok(Self {
             name,
             field_id,
+            field_type,
             is_required,
         })
     }
