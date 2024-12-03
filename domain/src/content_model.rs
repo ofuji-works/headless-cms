@@ -1,15 +1,15 @@
 use anyhow::{bail, Result};
-use crate::field::Field;
+use crate::field_meta::FieldMeta;
 
 pub struct ContentModel {
   pub name: String,
   pub api_identifier: String,
   pub description: Option<String>,
-  pub fields: Vec<Field>,
+  pub fields: Vec<FieldMeta>,
 }
 
 impl ContentModel {
-    pub fn try_new(name: String, api_identifier: String, description: Option<String>, fields: Vec<Field>) -> Result<Self> {
+    pub fn try_new(name: String, api_identifier: String, description: Option<String>, fields: Vec<FieldMeta>) -> Result<Self> {
 
         if name.len() > 50 {
             bail!("The maximum allowed length is 50 characters.");
