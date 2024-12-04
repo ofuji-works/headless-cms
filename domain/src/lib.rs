@@ -1,7 +1,5 @@
-pub mod content;
-pub mod content_model;
-pub mod field;
-pub mod field_meta;
+pub mod model;
+pub mod repository;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

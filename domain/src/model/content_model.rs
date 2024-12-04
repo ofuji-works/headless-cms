@@ -1,5 +1,6 @@
 use anyhow::{bail, Result};
-use crate::field_meta::FieldMeta;
+
+use crate::model::field_meta::FieldMeta;
 
 pub struct ContentModel {
   pub name: String,
