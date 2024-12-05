@@ -7,7 +7,7 @@ FROM debian:bookworm-slim
 WORKDIR /app
 RUN adduser app && chown -R app /app
 USER app
-COPY --from=builder /app/target/release/headless-cms /app/headless-cms
+COPY --from=builder /app/target/release/app /app/headless-cms
 ENV PORT 8080
 EXPOSE $PORT
 ENTRYPOINT ["./headless-cms"]
