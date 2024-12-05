@@ -1,12 +1,72 @@
 [env]
-APP_PORT = "8080"
+APP_PORT = 8080
+REDIS_PORT = 6379
+POSTGRES_PORT = 5432
+DATABASE_USERNAME = "app"
+DATABASE_PASSWORD = "passw0rd"
+DATABASE_NAME = "app"
+DATABASE_URL = "postgresql://postgres:5432/${DATABASE_NAME}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}"
 
-[tasks.dev]
+[config]
+default_to_workspace = false
+
+[tasks.check]
 command = "cargo"
-args = ["run"]
+args = ["check"]
+
+[tasks.fmt]
+command = "cargo"
+args = ["fmt", "--all", "${@}"]
+
+[tasks.clippy]
+command = "cargo"
+args = ["clippy", "--all", "--all-targets", "${@}"]
+
+[tasks.watch]
+run_tasks = [{ name = ["fmt", "clippy"] }]
 watch = true
 
-[tasks.docker-run]
-command = "docker-compose"
-args = ["up", "--build"]
+[tasks.run]
+command = "cargo"
+args = ["run", "${@}"]
+
+[tasks.docker-run-for-linux]
+command = "sudo"
+args = ["docker-compose","up", "--build", "-d"]
+
+[tasks.compose-up-db]
+command = "sudo"
+args = ["docker-compose", "up", "-d", "postgres"]
+
+[tasks.docker-down-for-linux]
+command = "sudo"
+args = ["docker-compose", "down"]
+
+[tasks.docker-remove-for-linux]
+command = "sudo"
+args = ["docker-compose", "down", "-v"]
+
+[tasks.migrate]
+install_crate = { crate_name = "sqlx-cli", binary = "sqlx", test_arg = "--help" }
+script = '''
+#!/bin/bash
+until sqlx migrate run --source infrastructure/migrations; do
+  sleep 1
+done
+'''
+
+[tasks.sqlx]
+install_crate = { crate_name = "sqlx-cli", binary = "sqlx", test_arg = "--help" }
+command = "sqlx"
+args = ["${@}", "--source", "infrastructure/migrations"]
+
+[tasks.psql]
+command = "sudo"
+args = [
+  "docker", "run", "-it", "--rm",
+  "--network", "host",
+  "-v", "${PWD}:/work",
+  "postgres:15", "psql", "${DATABASE_URL}",
+  "-f", "/work/data/initial_setup.sql"
+]
 
