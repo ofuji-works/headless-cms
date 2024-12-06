@@ -5,7 +5,6 @@ use crate::model::field::Field;
 
 #[derive(new)]
 pub struct Content {
-    pub model:  ContentModel,
+    pub model: ContentModel,
     pub fields: Vec<Field>,
 }
-

@@ -18,8 +18,12 @@ pub struct FieldMeta {
 }
 
 impl FieldMeta {
-    pub fn try_new (name: String, field_id: String, field_type: FieldType, is_required: bool) -> Result<Self> {
-
+    pub fn try_new(
+        name: String,
+        field_id: String,
+        field_type: FieldType,
+        is_required: bool,
+    ) -> Result<Self> {
         if name.len() > 50 {
             bail!("The maximum allowed length is 50 characters.")
         }

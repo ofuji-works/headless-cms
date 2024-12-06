@@ -7,4 +7,3 @@ pub struct Field {
     pub meta: FieldMeta,
     pub value: String,
 }
-

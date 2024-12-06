@@ -19,7 +19,16 @@ impl From<DatabaseConfig> for PgConnectOptions {
     }
 }
 
-pub fn connect_database_with(cfg: DatabaseConfig) -> PgPool {
-    PgPool::connect_lazy_with(cfg.into())
+#[derive(Clone)]
+pub struct ConnectionPool(PgPool)
+
+impl ConnectionPool {
+    pub fn inner_ref(&self) -> &PgPool {
+        &self.0
+    }
 }
 
+pub fn connect_database_with(cfg: DatabaseConfig) -> ConnectionPool {
+    let pool = PgPool::connect_lazy_with(cfg.into());
+    ConnectionPool(pool)
+}

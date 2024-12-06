@@ -1,7 +1,6 @@
-use axum::{
-    routing::get,
-    Router,
-};
+pub mod database;
+
+use axum::{routing::get, Router};
 
 pub struct WebApp;
 
