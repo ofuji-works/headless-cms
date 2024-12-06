@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.7.9"
 anyhow.workspace = true
+async-trait.workspace = true
+derive-new.workspace = true
 rstest.workspace = true
 tokio.workspace = true
 sqlx = { version = "0.8.2", features = ["runtime-tokio", "uuid", "chrono", "macros", "postgres", "migrate"] }
 domain.workspace = true
+shared.workspace = true
 

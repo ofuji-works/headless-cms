@@ -617,7 +617,11 @@ dependencies = [
 name = "headless-cms"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "infrastructure",
+ "interface",
+ "registry",
+ "shared",
  "tokio",
 ]
 
@@ -924,9 +928,11 @@ name = "infrastructure"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "axum",
+ "async-trait",
+ "derive-new",
  "domain",
  "rstest",
+ "shared",
  "sqlx",
  "tokio",
 ]
@@ -934,6 +940,13 @@ dependencies = [
 [[package]]
 name = "interface"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "derive-new",
+ "registry",
+ "tokio",
+]
 
 [[package]]
 name = "itoa"
@@ -1332,6 +1345,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
+name = "registry"
+version = "0.1.0"
+dependencies = [
+ "infrastructure",
+]
+
+[[package]]
 name = "relative-path"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1513,6 +1533,14 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "shared"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "derive-new",
 ]
 
 [[package]]

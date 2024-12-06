@@ -1,14 +1,27 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+pub mod handler;
+pub mod route;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use std::net::{Ipv4Addr, SocketAddr};
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+use axum::{Router, serve};
+use anyhow::{Error, Result};
+use registry::AppRegistry;
+use tokio::net::TcpListener;
+
+use crate::route::health::build_health_check_routers;
+
+pub struct WebApp;
+
+impl WebApp {
+    pub async fn run(registry: AppRegistry) -> Result<()> {
+        let app = Router::new()
+            .merge(build_health_check_routers()).with_state(registry);
+
+        let port = std::env::var("DATABASE_PORT")?.parse()?;
+        let addr = SocketAddr::new(Ipv4Addr::LOCALHOST.into(), port);
+        let listener = TcpListener::bind(&addr).await?;
+
+        serve(listener, app).await.map_err(Error::from)
     }
 }
+

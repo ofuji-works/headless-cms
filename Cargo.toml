@@ -14,6 +14,8 @@ members = [
   "domain",
   "infrastructure",
   "interface",
+  "registry",
+  "shared",
 ]
 
 [workspace.dependencies]
@@ -24,8 +26,15 @@ tokio = { version = "1.41.1", features = ["full"] }
 derive-new = "0.7.0"
 domain = { path = "./domain" }
 infrastructure = { path = "./infrastructure" }
+interface = { path = "./interface" }
+shared = { path = "./shared" }
+registry = { path = "./registry" }
 
 [dependencies]
+anyhow.workspace = true
 tokio.workspace = true
 infrastructure.workspace = true
- 
+interface.workspace = true
+shared.workspace = true
+registry.workspace = true
+
