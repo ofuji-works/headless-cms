@@ -1,2 +1,0 @@
-[env]
-DATABASE_URL="postgres://app:passw0rd@localhost:5432/app"
