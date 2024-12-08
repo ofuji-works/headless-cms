@@ -1,5 +1,7 @@
 use anyhow::{bail, Result};
+use serde::Deserialize;
 
+#[derive(Debug, Deserialize)]
 pub enum FieldType {
     ShortText,
     LongText,
@@ -10,6 +12,7 @@ pub enum FieldType {
     Media,
 }
 
+#[derive(Debug, Deserialize)]
 pub struct FieldMeta {
     pub name: String,
     pub field_id: String,
