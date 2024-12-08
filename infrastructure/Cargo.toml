@@ -10,6 +10,7 @@ derive-new.workspace = true
 rstest.workspace = true
 tokio.workspace = true
 sqlx = { version = "0.8.2", features = ["runtime-tokio", "uuid", "chrono", "macros", "postgres", "migrate"] }
+serde_json.workspace = true
 domain.workspace = true
 shared.workspace = true
 

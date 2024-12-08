@@ -362,6 +362,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "derive-new",
+ "serde",
 ]
 
 [[package]]
@@ -932,6 +933,7 @@ dependencies = [
  "derive-new",
  "domain",
  "rstest",
+ "serde_json",
  "shared",
  "sqlx",
  "tokio",

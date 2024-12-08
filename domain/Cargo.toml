@@ -7,4 +7,5 @@ edition = "2021"
 anyhow.workspace = true
 async-trait.workspace = true 
 derive-new.workspace = true
+serde.workspace = true
 
