@@ -17,7 +17,7 @@ impl WebApp {
         let app = Router::new()
             .merge(build_health_check_routers()).with_state(registry);
 
-        let port = std::env::var("DATABASE_PORT")?.parse()?;
+        let port = std::env::var("APP_PORT")?.parse()?;
         let addr = SocketAddr::new(Ipv4Addr::LOCALHOST.into(), port);
         let listener = TcpListener::bind(&addr).await?;
 

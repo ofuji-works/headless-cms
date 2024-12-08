@@ -18,8 +18,8 @@ impl AppConfig {
     pub fn new() -> Result<Self> {
         let database = DatabaseConfig::new(
             std::env::var("DATABASE_HOST")?,
-            std::env::var("DATABASE_PORT")?.parse()?,
-            std::env::var("DATABASE_USER")?,
+            std::env::var("POSTGRES_PORT")?.parse()?,
+            std::env::var("DATABASE_USERNAME")?,
             std::env::var("DATABASE_PASSWORD")?,
             std::env::var("DATABASE_NAME")?
         ); 
