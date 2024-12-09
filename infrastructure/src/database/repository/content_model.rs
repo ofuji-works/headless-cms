@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use derive_new::new;
 use domain::{
     model::{content_model::ContentModel, field_meta::FieldMeta},
-    repository::content_model::ContentModelRepository,
+    repository::content_model::{CreateContentModel, ContentModelRepository}
 };
 use sqlx::{types::{chrono::{DateTime, Utc}, Uuid}, FromRow};
 
@@ -29,12 +29,19 @@ struct ContentModelRow {
 impl TryFrom<ContentModelRow> for ContentModel {
     type Error = Error;
     fn try_from(row: ContentModelRow) -> Result<Self> {
-        let fields: Vec<FieldMeta> = serde_json::from_value(row.fields)?;
+        let ContentModelRow {
+            name,
+            api_identifier,
+            description,
+            fields,
+            ..
+        } = row;
+        let fields: Vec<FieldMeta> = serde_json::from_value(fields)?;
 
         Ok(Self {
-            name: row.name,
-            api_identifier: row.api_identifier,
-            description: Some(row.description),
+            name,
+            api_identifier,
+            description: Some(description),
             fields,
         })
     }
@@ -56,5 +63,22 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             .await?;
 
         rows.into_iter().map(ContentModel::try_from).collect()
+    }
+
+    async fn create(&self, content_model: CreateContentModel) -> Result<()> {
+
+        let description = content_model.description.or_else("".into());
+        let fields = serde_json::to_value(content_model.fields)?;
+
+        sqlx::query!(r#"
+            INSERT INTO content_model (name, api_identifier, description, fields) VALUES ($1, $2, $3, $4)
+        "#,
+            content_model.name,
+            content_model.api_identifier,
+            description,
+            fields,
+        ).excute(self.db.inner_ref()).await?;
+
+        Ok(())
     }
 }
