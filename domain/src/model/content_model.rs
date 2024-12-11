@@ -5,6 +5,7 @@ use crate::model::field_meta::FieldMeta;
 
 #[derive(Debug, Deserialize)]
 pub struct ContentModel {
+    pub id: String,
     pub name: String,
     pub api_identifier: String,
     pub description: Option<String>,
@@ -13,6 +14,7 @@ pub struct ContentModel {
 
 impl ContentModel {
     pub fn try_new(
+        id: String,
         name: String,
         api_identifier: String,
         description: Option<String>,
@@ -33,6 +35,7 @@ impl ContentModel {
         }
 
         Ok(Self {
+            id,
             name,
             api_identifier,
             description,

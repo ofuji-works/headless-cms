@@ -11,8 +11,6 @@ use crate::database::ConnectionPool;
 
 #[derive(Debug, FromRow)]
 struct ContentModelRow {
-    #[sqlx(skip)]
-    #[allow(unused)]
     pub content_model_id: Uuid,
     pub name: String,
     pub api_identifier: String,
@@ -30,6 +28,7 @@ impl TryFrom<ContentModelRow> for ContentModel {
     type Error = Error;
     fn try_from(row: ContentModelRow) -> Result<Self> {
         let ContentModelRow {
+            content_model_id,
             name,
             api_identifier,
             description,
@@ -39,6 +38,7 @@ impl TryFrom<ContentModelRow> for ContentModel {
         let fields: Vec<FieldMeta> = serde_json::from_value(fields)?;
 
         Ok(Self {
+            id: content_model_id.into(),
             name,
             api_identifier,
             description: Some(description),
@@ -77,6 +77,15 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             content_model.api_identifier,
             description,
             fields,
+        ).excute(self.db.inner_ref()).await?;
+
+        Ok(())
+    }
+
+    async fn delete(&self, id: String) -> Result<()> {
+        sqlx::query!(
+            r#"DELETE FROM content_model WHERE content_model_id = $1"#,
+            id,
         ).excute(self.db.inner_ref()).await?;
 
         Ok(())
