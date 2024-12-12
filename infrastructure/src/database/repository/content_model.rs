@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use derive_new::new;
 use domain::{
     model::{content_model::ContentModel, field_meta::FieldMeta},
-    repository::content_model::{CreateContentModel, ContentModelRepository}
+    repository::content_model::{ContentModelRepository, CreateContentModel, UpdateContentModel}
 };
 use sqlx::{types::{chrono::{DateTime, Utc}, Uuid}, FromRow};
 
@@ -65,29 +65,60 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
         rows.into_iter().map(ContentModel::try_from).collect()
     }
 
-    async fn create(&self, content_model: CreateContentModel) -> Result<()> {
+    async fn create(&self, data: CreateContentModel) -> Result<()> {
 
-        let description = content_model.description.or_else("".into());
-        let fields = serde_json::to_value(content_model.fields)?;
+        let description = data.description.or_else("".into());
+        let fields = serde_json::to_value(data.fields)?;
 
         sqlx::query!(r#"
             INSERT INTO content_model (name, api_identifier, description, fields) VALUES ($1, $2, $3, $4)
         "#,
-            content_model.name,
-            content_model.api_identifier,
+            data.name,
+            data.api_identifier,
             description,
             fields,
-        ).excute(self.db.inner_ref()).await?;
+        ).excute(self.db.inner_ref()).await
+    }
 
-        Ok(())
+    async fn update(&self, data: UpdateContentModel) -> Result<()> {
+
+        let UpdateContentModel {
+            id,
+            name,
+            api_identifier,
+            description,
+            fields,
+        } = data;
+
+        let mut set_params: Vec<String> = Vec::new();
+
+        if let Some(name) = name {
+            set_params.push(format!("name = {}", name));
+        }
+
+        if let Some(api_identifier) = api_identifier {
+            set_params.push(format!("api_identifier = {}", api_identifier));
+        }
+
+        if let Some(description) = description {
+            set_params.push(format!("description = {}", description));
+        }
+
+        if let Some(fields) = fields {
+            set_params.push(format!("fields = {}", serde_json::to_value(fields)?));
+        }
+
+        sqlx::query!(
+            "UPDATE content_model SET {} WHERE content_model_id = {}",
+            set_params.join(","),
+            id,
+        ).excute(self.db.inner_ref()).await
     }
 
     async fn delete(&self, id: String) -> Result<()> {
         sqlx::query!(
             r#"DELETE FROM content_model WHERE content_model_id = $1"#,
             id,
-        ).excute(self.db.inner_ref()).await?;
-
-        Ok(())
+        ).excute(self.db.inner_ref()).await
     }
 }
