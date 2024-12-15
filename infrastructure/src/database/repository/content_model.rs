@@ -102,7 +102,7 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
         let mut set_params: Vec<String> = Vec::new();
 
         if let Some(name) = name {
-            set_params.push(format!("name = '{}'", name));
+            set_params.push(format!("name = {}", name));
         }
 
         if let Some(api_identifier) = api_identifier {
@@ -117,22 +117,18 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             set_params.push(format!("fields = {}", serde_json::to_value(fields)?));
         }
 
-        if set_params.len() > 1 {
-            let update_params_str = set_params.join(",");
-        } else {
-            match set_params.first() {
-                Some(str) => {
-                    let update_params_str = str;
-                },
-                None => bail!("")
-            };
-        };
+        if set_params.len() < 1 {
+            bail!("")
+        } 
 
-        //sqlx::query!(
-          //  r#"UPDATE content_model SET $1 WHERE content_model_id = $2"#,
-          //  update_params_str,
-          //  content_model_id,
-        // ).execute(self.db.inner_ref()).await?;
+        let update_params_str = set_params.join(",");
+
+        sqlx::query(
+            r#"UPDATE content_model SET name = $1 WHERE content_model_id = $2"#
+        )
+            .bind(update_params_str)
+            .bind(content_model_id)
+            .execute(self.db.inner_ref()).await?;
 
         Ok(())
     }
