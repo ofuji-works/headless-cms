@@ -1,4 +1,6 @@
-use anyhow::{Result, Error};
+use std::str::FromStr;
+
+use anyhow::{bail, Error, Result};
 use async_trait::async_trait;
 use derive_new::new;
 use domain::{
@@ -67,7 +69,10 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
 
     async fn create(&self, data: CreateContentModel) -> Result<()> {
 
-        let description = data.description.or_else("".into());
+        let description = match data.description {
+            Some(str) => str,
+            None => "".into(),
+        };
         let fields = serde_json::to_value(data.fields)?;
 
         sqlx::query!(r#"
@@ -77,7 +82,9 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             data.api_identifier,
             description,
             fields,
-        ).excute(self.db.inner_ref()).await
+        ).execute(self.db.inner_ref()).await?;
+
+        Ok(())
     }
 
     async fn update(&self, data: UpdateContentModel) -> Result<()> {
@@ -90,10 +97,12 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             fields,
         } = data;
 
+        let content_model_id = Uuid::from_str(&id)?;
+
         let mut set_params: Vec<String> = Vec::new();
 
         if let Some(name) = name {
-            set_params.push(format!("name = {}", name));
+            set_params.push(format!("name = '{}'", name));
         }
 
         if let Some(api_identifier) = api_identifier {
@@ -108,17 +117,34 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             set_params.push(format!("fields = {}", serde_json::to_value(fields)?));
         }
 
-        sqlx::query!(
-            "UPDATE content_model SET {} WHERE content_model_id = {}",
-            set_params.join(","),
-            id,
-        ).excute(self.db.inner_ref()).await
+        if set_params.len() > 1 {
+            let update_params_str = set_params.join(",");
+        } else {
+            match set_params.first() {
+                Some(str) => {
+                    let update_params_str = str;
+                },
+                None => bail!("")
+            };
+        };
+
+        //sqlx::query!(
+          //  r#"UPDATE content_model SET $1 WHERE content_model_id = $2"#,
+          //  update_params_str,
+          //  content_model_id,
+        // ).execute(self.db.inner_ref()).await?;
+
+        Ok(())
     }
 
     async fn delete(&self, id: String) -> Result<()> {
+        let content_model_id = Uuid::from_str(&id)?;
+
         sqlx::query!(
             r#"DELETE FROM content_model WHERE content_model_id = $1"#,
-            id,
-        ).excute(self.db.inner_ref()).await
+            content_model_id,
+        ).execute(self.db.inner_ref()).await?;
+
+        Ok(())
     }
 }
