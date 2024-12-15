@@ -68,6 +68,12 @@ checksum = "4c95c10ba0b00a02636238b814946408b1322d5ac4760326e6fb8ec956d85775"
 [[package]]
 name = "application"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "derive-new",
+ "domain",
+ "serde_json",
+]
 
 [[package]]
 name = "async-trait"
@@ -944,8 +950,10 @@ name = "interface"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "application",
  "axum",
  "derive-new",
+ "domain",
  "registry",
  "tokio",
 ]
