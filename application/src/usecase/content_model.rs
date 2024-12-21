@@ -4,6 +4,7 @@ use anyhow::{
     Error,
 }; 
 use derive_new::new;
+use serde::Deserialize;
 use serde_json::{
     Value,
     from_value,
@@ -18,6 +19,7 @@ use domain::{
     }
 };
 
+#[derive(Deserialize)]
 pub struct CreateContentModelInput {
     name: String,
     api_identifier: String,
@@ -47,6 +49,7 @@ impl TryFrom<CreateContentModelInput> for CreateContentModel {
     }
 }
 
+#[derive(new)]
 pub struct UpdateContentModelInput {
     id: String,
     name: Option<String>,

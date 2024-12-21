@@ -11,7 +11,8 @@ registry.workspace = true
 axum = "0.7.9"
 anyhow.workspace = true
 derive-new.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
-serde.workspace = true
 

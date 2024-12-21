@@ -72,6 +72,7 @@ dependencies = [
  "anyhow",
  "derive-new",
  "domain",
+ "serde",
  "serde_json",
 ]
 
@@ -989,6 +990,7 @@ dependencies = [
  "garde",
  "registry",
  "serde",
+ "serde_json",
  "thiserror 2.0.7",
  "tokio",
 ]
