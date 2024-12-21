@@ -4,9 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+application.workspace = true
+domain.workspace = true
+garde.workspace = true
 registry.workspace = true
 axum = "0.7.9"
 anyhow.workspace = true
 derive-new.workspace = true
+thiserror.workspace = true
 tokio.workspace = true
+serde.workspace = true
 
