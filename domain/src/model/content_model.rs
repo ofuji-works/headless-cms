@@ -1,9 +1,9 @@
 use anyhow::{bail, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::model::field_meta::FieldMeta;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ContentModel {
     pub id: String,
     pub name: String,
