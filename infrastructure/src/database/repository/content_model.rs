@@ -59,7 +59,7 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
     async fn get(&self) -> Result<Vec<ContentModel>> {
         let rows: Vec<ContentModelRow> = sqlx::query_as!(
                 ContentModelRow,
-                r#"SELECT * from content_model"#
+                r#"SELECT * FROM content_model"#
             )
             .fetch_all(self.db.inner_ref())
             .await?;
