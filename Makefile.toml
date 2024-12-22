@@ -64,6 +64,7 @@ command = "sudo"
 args = ["docker-compose", "down", "-v"]
 
 [tasks.migrate]
+dependencies = ["compose-up-db-for-linux"]
 install_crate = { crate_name = "sqlx-cli", binary = "sqlx", test_arg = "--help" }
 script = '''
 #!/bin/bash
@@ -71,6 +72,11 @@ until sqlx migrate run --source infrastructure/migrations; do
   sleep 1
 done
 '''
+
+[tasks.migrate-revert]
+dependencies = ["compose-up-db-for-linux"]
+command = "sqlx"
+args = ["migrate", "revert", "--source", "infrastructure/migrations"]
 
 [tasks.sqlx]
 install_crate = { crate_name = "sqlx-cli", binary = "sqlx", test_arg = "--help" }
