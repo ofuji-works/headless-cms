@@ -37,14 +37,14 @@ impl TryFrom<ContentModelRow> for ContentModel {
             fields,
             ..
         } = row;
-        let fields: Vec<FieldMeta> = serde_json::from_value(fields)?;
+        let field_metas: Vec<FieldMeta> = serde_json::from_value(fields)?;
 
         Ok(Self {
             id: content_model_id.into(),
             name,
             api_identifier,
             description: Some(description),
-            fields,
+            field_metas,
         })
     }
 }
@@ -124,7 +124,7 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
         let update_params_str = set_params.join(",");
 
         sqlx::query(
-            r#"UPDATE content_model SET name = $1 WHERE content_model_id = $2"#
+            r#"UPDATE content_model SET $1 WHERE content_model_id = $2"#
         )
             .bind(update_params_str)
             .bind(content_model_id)

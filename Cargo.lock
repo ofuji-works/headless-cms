@@ -392,6 +392,7 @@ dependencies = [
  "async-trait",
  "derive-new",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

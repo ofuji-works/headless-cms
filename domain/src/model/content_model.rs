@@ -9,7 +9,7 @@ pub struct ContentModel {
     pub name: String,
     pub api_identifier: String,
     pub description: Option<String>,
-    pub fields: Vec<FieldMeta>,
+    pub field_metas: Vec<FieldMeta>,
 }
 
 impl ContentModel {
@@ -18,7 +18,7 @@ impl ContentModel {
         name: String,
         api_identifier: String,
         description: Option<String>,
-        fields: Vec<FieldMeta>,
+        field_metas: Vec<FieldMeta>,
     ) -> Result<Self> {
         if name.len() > 50 {
             bail!("The maximum allowed length is 50 characters.");
@@ -39,7 +39,7 @@ impl ContentModel {
             name,
             api_identifier,
             description,
-            fields,
+            field_metas,
         })
     }
 
