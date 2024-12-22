@@ -22,7 +22,6 @@ use crate::handler::error::{
     AppResult,
 };
 
-
 #[derive(Deserialize)]
 pub struct GetContentModelRequest {}
 

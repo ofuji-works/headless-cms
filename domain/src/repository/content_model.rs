@@ -1,24 +1,26 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use derive_new::new;
+use serde::Deserialize;
+use serde_json::Value;
 
-use crate::model::{content_model::ContentModel, field_meta::FieldMeta};
+use crate::model::content_model::ContentModel;
 
-#[derive(Debug, new)]
+#[derive(Debug, Deserialize, new)]
 pub struct CreateContentModel {
     pub name: String,
     pub api_identifier: String,
     pub description: Option<String>,
-    pub fields: Vec<FieldMeta>,
+    pub fields: Value,
 }
 
-#[derive(Debug, new)]
+#[derive(Debug, Deserialize, new)]
 pub struct UpdateContentModel {
     pub id: String,
     pub name: Option<String>,
     pub api_identifier: Option<String>,
     pub description: Option<String>,
-    pub fields: Option<Vec<FieldMeta>>,
+    pub fields: Option<Value>,
 }
 
 #[async_trait]

@@ -73,7 +73,6 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             Some(str) => str,
             None => "".into(),
         };
-        let fields = serde_json::to_value(data.fields)?;
 
         sqlx::query!(r#"
             INSERT INTO content_model (name, api_identifier, description, fields) VALUES ($1, $2, $3, $4)
@@ -81,7 +80,7 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             data.name,
             data.api_identifier,
             description,
-            fields,
+            data.fields,
         ).execute(self.db.inner_ref()).await?;
 
         Ok(())
@@ -114,7 +113,7 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
         }
 
         if let Some(fields) = fields {
-            set_params.push(format!("fields = {}", serde_json::to_value(fields)?));
+            set_params.push(format!("fields = {}", fields));
         }
 
         if set_params.len() < 1 {
