@@ -1,21 +1,18 @@
 use std::sync::Arc;
 
 use infrastructure::database::{
-    repository::{
-        health::HealthCheckRepositoryImpl,
-        content_model::ContentModelRepositoryImpl
-    },
-    ConnectionPool
+    repository::{content_model::ContentModelRepositoryImpl, health::HealthCheckRepositoryImpl},
+    ConnectionPool,
 };
 
 #[derive(Clone)]
 pub struct AppRegistry {
     health_check_repository: Arc<HealthCheckRepositoryImpl>,
-    content_model_repository: Arc<ContentModelRepositoryImpl>
+    content_model_repository: Arc<ContentModelRepositoryImpl>,
 }
 
 impl AppRegistry {
-    pub fn new (pool: ConnectionPool) -> Self {
+    pub fn new(pool: ConnectionPool) -> Self {
         let health_check_repository = Arc::new(HealthCheckRepositoryImpl::new(pool.clone()));
         let content_model_repository = Arc::new(ContentModelRepositoryImpl::new(pool.clone()));
 

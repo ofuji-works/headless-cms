@@ -3,13 +3,13 @@ pub mod route;
 
 use std::net::{Ipv4Addr, SocketAddr};
 
-use axum::{Router, serve};
 use anyhow::{Error, Result};
+use axum::{serve, Router};
 use registry::AppRegistry;
 use tokio::net::TcpListener;
 
-use crate::route::health::build_health_check_routers;
 use crate::route::content_model::build_content_model_routers;
+use crate::route::health::build_health_check_routers;
 
 pub struct WebApp;
 
@@ -27,4 +27,3 @@ impl WebApp {
         serve(listener, app).await.map_err(Error::from)
     }
 }
-

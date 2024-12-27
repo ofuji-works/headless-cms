@@ -1,14 +1,10 @@
-use std::sync::Arc;
-use anyhow::Result; 
+use anyhow::Result;
 use derive_new::new;
+use std::sync::Arc;
 
 use domain::{
     model::content_model::ContentModel,
-    repository::content_model::{
-        ContentModelRepository,
-        CreateContentModel,
-        UpdateContentModel,
-    }
+    repository::content_model::{ContentModelRepository, CreateContentModel, UpdateContentModel},
 };
 
 pub type CreateContentModelInput = CreateContentModel;
@@ -16,7 +12,7 @@ pub type UpdateContentModelInput = UpdateContentModel;
 
 #[derive(new)]
 pub struct ContentModelUsecase {
-    repository: Arc<dyn ContentModelRepository>
+    repository: Arc<dyn ContentModelRepository>,
 }
 
 impl ContentModelUsecase {
@@ -36,4 +32,3 @@ impl ContentModelUsecase {
         self.repository.clone().delete(id).await
     }
 }
-

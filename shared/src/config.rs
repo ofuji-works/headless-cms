@@ -11,7 +11,7 @@ pub struct DatabaseConfig {
 }
 
 pub struct AppConfig {
-   pub database: DatabaseConfig
+    pub database: DatabaseConfig,
 }
 
 impl AppConfig {
@@ -21,11 +21,9 @@ impl AppConfig {
             std::env::var("POSTGRES_PORT")?.parse()?,
             std::env::var("DATABASE_USERNAME")?,
             std::env::var("DATABASE_PASSWORD")?,
-            std::env::var("DATABASE_NAME")?
-        ); 
+            std::env::var("DATABASE_NAME")?,
+        );
 
         Ok(Self { database })
     }
 }
-
-

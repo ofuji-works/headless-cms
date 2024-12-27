@@ -1,4 +1,7 @@
-use axum::{http::StatusCode, response::{IntoResponse, Response}};
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -20,9 +23,9 @@ impl IntoResponse for AppError {
         let status_code = match self {
             Self::EntityNotFound(_) => StatusCode::NOT_FOUND,
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
-            Self::CreateRecordError
-                | Self::UpdateRecordError
-                | Self::DeleteRecordError => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::CreateRecordError | Self::UpdateRecordError | Self::DeleteRecordError => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
         };
 
         status_code.into_response()
@@ -30,4 +33,3 @@ impl IntoResponse for AppError {
 }
 
 pub type AppResult<T> = Result<T, AppError>;
-

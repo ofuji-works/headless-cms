@@ -10,4 +10,3 @@ pub fn build_health_check_routers() -> Router<AppRegistry> {
 
     Router::new().nest("/health", routers)
 }
-

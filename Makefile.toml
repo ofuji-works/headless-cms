@@ -24,6 +24,7 @@ command = "cargo"
 args = ["clippy", "--all", "--all-targets", "${@}"]
 
 [tasks.watch]
+dependencies = ["compose-up-db-for-linux"]
 run_task = [{ name = ["fmt", "clippy"] }]
 watch = true
 

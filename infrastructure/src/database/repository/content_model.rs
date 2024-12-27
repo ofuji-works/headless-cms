@@ -5,9 +5,15 @@ use async_trait::async_trait;
 use derive_new::new;
 use domain::{
     model::{content_model::ContentModel, field_meta::FieldMeta},
-    repository::content_model::{ContentModelRepository, CreateContentModel, UpdateContentModel}
+    repository::content_model::{ContentModelRepository, CreateContentModel, UpdateContentModel},
 };
-use sqlx::{types::{chrono::{DateTime, Utc}, Uuid}, FromRow};
+use sqlx::{
+    types::{
+        chrono::{DateTime, Utc},
+        Uuid,
+    },
+    FromRow,
+};
 
 use crate::database::ConnectionPool;
 
@@ -57,18 +63,15 @@ pub struct ContentModelRepositoryImpl {
 #[async_trait]
 impl ContentModelRepository for ContentModelRepositoryImpl {
     async fn get(&self) -> Result<Vec<ContentModel>> {
-        let rows: Vec<ContentModelRow> = sqlx::query_as!(
-                ContentModelRow,
-                r#"SELECT * FROM content_model"#
-            )
-            .fetch_all(self.db.inner_ref())
-            .await?;
+        let rows: Vec<ContentModelRow> =
+            sqlx::query_as!(ContentModelRow, r#"SELECT * FROM content_model"#)
+                .fetch_all(self.db.inner_ref())
+                .await?;
 
         rows.into_iter().map(ContentModel::try_from).collect()
     }
 
     async fn create(&self, data: CreateContentModel) -> Result<()> {
-
         let description = match data.description {
             Some(str) => str,
             None => "".into(),
@@ -87,7 +90,6 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
     }
 
     async fn update(&self, data: UpdateContentModel) -> Result<()> {
-
         let UpdateContentModel {
             id,
             name,
@@ -118,16 +120,15 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
 
         if set_params.len() < 1 {
             bail!("")
-        } 
+        }
 
         let update_params_str = set_params.join(",");
 
-        sqlx::query(
-            r#"UPDATE content_model SET $1 WHERE content_model_id = $2"#
-        )
+        sqlx::query(r#"UPDATE content_model SET $1 WHERE content_model_id = $2"#)
             .bind(update_params_str)
             .bind(content_model_id)
-            .execute(self.db.inner_ref()).await?;
+            .execute(self.db.inner_ref())
+            .await?;
 
         Ok(())
     }
@@ -138,7 +139,9 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
         sqlx::query!(
             r#"DELETE FROM content_model WHERE content_model_id = $1"#,
             content_model_id,
-        ).execute(self.db.inner_ref()).await?;
+        )
+        .execute(self.db.inner_ref())
+        .await?;
 
         Ok(())
     }

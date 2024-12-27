@@ -9,8 +9,7 @@ pub struct Content {
     pub model: ContentModel,
     pub is_draft: bool,
     pub field_values: Vec<Field>,
-    pub published_at: Option<String>, 
+    pub published_at: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
-

@@ -8,7 +8,7 @@ use crate::model::content::Content;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateContent {
     pub content_model_id: String,
-    pub field_values: Value,  
+    pub field_values: Value,
     pub is_draft: bool,
 }
 
@@ -16,15 +16,14 @@ pub struct CreateContent {
 pub struct UpdateContent {
     pub id: String,
     pub content_model_id: String,
-    pub field_values: Option<Value>,  
+    pub field_values: Option<Value>,
     pub is_draft: Option<bool>,
 }
 
 #[async_trait]
 pub trait ContentRepository {
-    async fn get(&self) -> Result<Vec<Content>>; 
+    async fn get(&self) -> Result<Vec<Content>>;
     async fn create(&self, data: CreateContent) -> Result<()>;
     async fn update(&self, data: UpdateContent) -> Result<()>;
     async fn delete(&self, id: String) -> Result<()>;
 }
-

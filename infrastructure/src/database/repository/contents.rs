@@ -1,33 +1,34 @@
 use anyhow::{bail, Error, Result};
 use async_trait::async_trait;
 use serde_json::Value;
-use sqlx::{types::{chrono::{DateTime, Utc}, Uuid}, FromRow};
+use sqlx::{
+    types::{
+        chrono::{DateTime, Utc},
+        Uuid,
+    },
+    FromRow,
+};
 
 use domain::{
-    model::{
-        content::Content,
-        content_model::ContentModel,
-        field::Field,
-        field_meta::FieldMeta,
-    },
-    repository::content::{ContentRepository, CreateContent, UpdateContent}
+    model::{content::Content, content_model::ContentModel, field::Field, field_meta::FieldMeta},
+    repository::content::{ContentRepository, CreateContent, UpdateContent},
 };
 
 use crate::database::ConnectionPool;
 
 #[derive(Debug, FromRow)]
 pub struct ContentRow {
-   pub content_id: Uuid, 
-   pub field_values: Value,
-   pub is_draft: bool,
-   pub published_at: Option<DateTime<Utc>>,
-   pub created_at: DateTime<Utc>,
-   pub updated_at: DateTime<Utc>,
-   pub content_model_id: Uuid,
-   pub content_model_name: String,
-   pub content_model_api_identifier: String,
-   pub content_model_description: Option<String>,
-   pub field_metas: Value,
+    pub content_id: Uuid,
+    pub field_values: Value,
+    pub is_draft: bool,
+    pub published_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub content_model_id: Uuid,
+    pub content_model_name: String,
+    pub content_model_api_identifier: String,
+    pub content_model_description: Option<String>,
+    pub field_metas: Value,
 }
 
 impl TryFrom<ContentRow> for Content {
@@ -45,7 +46,6 @@ impl TryFrom<ContentRow> for Content {
             content_model_api_identifier,
             content_model_description,
             field_metas,
-
         } = row;
 
         let deserialized_field_metas: Vec<FieldMeta> = serde_json::from_value(field_metas)?;
@@ -56,7 +56,7 @@ impl TryFrom<ContentRow> for Content {
             content_model_description,
             deserialized_field_metas,
         )?;
-        let deserialized_field_values:Vec<Field> = serde_json::from_value(field_values)?; 
+        let deserialized_field_values: Vec<Field> = serde_json::from_value(field_values)?;
         let published_at_str: Option<String> = match published_at {
             Some(datetime) => Some(datetime.to_string()),
             None => None,
@@ -75,12 +75,12 @@ impl TryFrom<ContentRow> for Content {
 }
 
 pub struct ContentRepositoryImpl {
-    db: ConnectionPool
+    db: ConnectionPool,
 }
 
 #[async_trait]
 impl ContentRepository for ContentRepositoryImpl {
-    async fn get(&self) -> Result<Vec<Content>> { 
+    async fn get(&self) -> Result<Vec<Content>> {
         let rows: Vec<ContentRow> = sqlx::query_as!(
             ContentRow,
             r#"
@@ -99,9 +99,10 @@ impl ContentRepository for ContentRepositoryImpl {
                 FROM contents c 
                 INNER JOIN content_model m
                 ON c.content_model_id = m.content_model_id
-            "#)
-                .fetch_all(self.db.inner_ref()).await?;
-
+            "#
+        )
+        .fetch_all(self.db.inner_ref())
+        .await?;
 
         rows.into_iter().map(Content::try_from).collect()
     }
@@ -132,7 +133,10 @@ impl ContentRepository for ContentRepositoryImpl {
         let mut set_params: Vec<String> = Vec::new();
 
         if let Some(field_values) = field_values {
-            set_params.push(format!("field_values = {}", serde_json::to_value(field_values)?));
+            set_params.push(format!(
+                "field_values = {}",
+                serde_json::to_value(field_values)?
+            ));
         }
 
         if let Some(is_draft) = is_draft {
@@ -141,16 +145,15 @@ impl ContentRepository for ContentRepositoryImpl {
 
         if set_params.len() < 1 {
             bail!("")
-        } 
+        }
 
         let update_params_str = set_params.join(",");
 
-        sqlx::query(
-            r#"UPDATE contents SET $1 WHERE content_id = $2"#
-        )
+        sqlx::query(r#"UPDATE contents SET $1 WHERE content_id = $2"#)
             .bind(update_params_str)
             .bind(parsed_content_id)
-            .execute(self.db.inner_ref()).await?;
+            .execute(self.db.inner_ref())
+            .await?;
 
         Ok(())
     }
@@ -161,9 +164,10 @@ impl ContentRepository for ContentRepositoryImpl {
         sqlx::query!(
             r#"DELETE FROM contents WHERE content_id = $1"#,
             parsed_content_id
-        ).execute(self.db.inner_ref()).await?;
+        )
+        .execute(self.db.inner_ref())
+        .await?;
 
         Ok(())
     }
 }
-

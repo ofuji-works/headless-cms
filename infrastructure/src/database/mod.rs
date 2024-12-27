@@ -1,7 +1,7 @@
 pub mod repository;
 
-use sqlx::{postgres::PgConnectOptions, PgPool};
 use shared::config::DatabaseConfig;
+use sqlx::{postgres::PgConnectOptions, PgPool};
 
 fn make_pg_connect_options(cfg: DatabaseConfig) -> PgConnectOptions {
     PgConnectOptions::new()
@@ -11,7 +11,6 @@ fn make_pg_connect_options(cfg: DatabaseConfig) -> PgConnectOptions {
         .password(&cfg.password)
         .database(&cfg.database)
 }
-
 
 #[derive(Clone)]
 pub struct ConnectionPool(PgPool);
@@ -27,4 +26,3 @@ pub fn connect_database_with(cfg: DatabaseConfig) -> ConnectionPool {
 
     ConnectionPool(pool)
 }
-

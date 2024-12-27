@@ -1,8 +1,8 @@
 use anyhow::Result;
-use interface::WebApp;
 use infrastructure::database::connect_database_with;
-use shared::config::AppConfig;
+use interface::WebApp;
 use registry::AppRegistry;
+use shared::config::AppConfig;
 
 #[tokio::main]
 async fn main() -> Result<()> {
