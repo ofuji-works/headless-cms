@@ -38,7 +38,7 @@ args = ["compose", "up", "--build", "-d"]
 
 [tasks.docker-run-for-linux]
 command = "sudo"
-args = ["docker-compose","up", "--build", "${@}"]
+args = ["docker", "compose", "up", "--build", "${@}"]
 
 [tasks.compose-up-db]
 command = "docker"
@@ -46,7 +46,7 @@ args = ["compose", "up", "-d", "postgres"]
 
 [tasks.compose-up-db-for-linux]
 command = "sudo"
-args = ["docker-compose", "up", "-d", "postgres"]
+args = ["docker", "compose", "up", "-d", "postgres"]
 
 [tasks.docker-down]
 command = "docker"

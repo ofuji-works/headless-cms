@@ -14,11 +14,11 @@ use registry::AppRegistry;
 use crate::handler::error::{AppError, AppResult};
 
 #[derive(Deserialize)]
-pub struct GetContentModelRequest {}
+pub struct GetContentModelQuery {}
 
 pub async fn get_content_models(
     State(registry): State<AppRegistry>,
-    Query(_): Query<GetContentModelRequest>,
+    Query(_): Query<GetContentModelQuery>,
 ) -> AppResult<Json<Vec<ContentModel>>> {
     let usecase = ContentModelUsecase::new(registry.content_model_repository());
     let result = usecase.get().await;

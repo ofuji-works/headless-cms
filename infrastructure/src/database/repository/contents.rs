@@ -1,5 +1,6 @@
 use anyhow::{bail, Error, Result};
 use async_trait::async_trait;
+use derive_new::new;
 use serde_json::Value;
 use sqlx::{
     types::{
@@ -74,6 +75,7 @@ impl TryFrom<ContentRow> for Content {
     }
 }
 
+#[derive(new)]
 pub struct ContentRepositoryImpl {
     db: ConnectionPool,
 }

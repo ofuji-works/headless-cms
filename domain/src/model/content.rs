@@ -1,9 +1,10 @@
 use derive_new::new;
+use serde::{Deserialize, Serialize};
 
 use crate::model::content_model::ContentModel;
 use crate::model::field::Field;
 
-#[derive(Debug, new)]
+#[derive(Debug, Deserialize, Serialize, new)]
 pub struct Content {
     pub id: String,
     pub model: ContentModel,

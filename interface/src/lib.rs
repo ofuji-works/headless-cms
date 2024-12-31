@@ -8,6 +8,7 @@ use axum::{serve, Router};
 use registry::AppRegistry;
 use tokio::net::TcpListener;
 
+use crate::route::content::build_contents_routers;
 use crate::route::content_model::build_content_model_routers;
 use crate::route::health::build_health_check_routers;
 
@@ -17,6 +18,7 @@ impl WebApp {
     pub async fn run(registry: AppRegistry) -> Result<()> {
         let app = Router::new()
             .merge(build_health_check_routers())
+            .merge(build_contents_routers())
             .merge(build_content_model_routers())
             .with_state(registry);
 
