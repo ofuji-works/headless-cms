@@ -7,10 +7,13 @@ use anyhow::{Error, Result};
 use axum::{serve, Router};
 use registry::AppRegistry;
 use tokio::net::TcpListener;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::route::content::build_contents_routers;
 use crate::route::content_model::build_content_model_routers;
 use crate::route::health::build_health_check_routers;
+use crate::route::swagger::ApiDoc;
 
 pub struct WebApp;
 
@@ -20,6 +23,7 @@ impl WebApp {
             .merge(build_health_check_routers())
             .merge(build_contents_routers())
             .merge(build_content_model_routers())
+            .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
             .with_state(registry);
 
         let port = std::env::var("APP_PORT")?.parse()?;

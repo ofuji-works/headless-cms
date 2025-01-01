@@ -1,7 +1,8 @@
 use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub enum FieldType {
     ShortText,
     LongText,
@@ -12,7 +13,7 @@ pub enum FieldType {
     Media,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct FieldMeta {
     pub name: String,
     pub field_id: String,

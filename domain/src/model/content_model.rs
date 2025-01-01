@@ -1,9 +1,10 @@
 use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use crate::model::field_meta::FieldMeta;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct ContentModel {
     pub id: String,
     pub name: String,

@@ -28,6 +28,7 @@ derive-new = "0.7.0"
 serde = "1.0.215"
 serde_json = { version = "1.0", features = ["raw_value"] }
 thiserror = "2.0.7"
+utoipa = { version = "5.3.0", features = ["axum_extras"] }
 application = { path = "./application" }
 domain = { path = "./domain" }
 infrastructure = { path = "./infrastructure" }

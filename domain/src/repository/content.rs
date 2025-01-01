@@ -3,10 +3,11 @@ use async_trait::async_trait;
 use derive_new::new;
 use serde::Deserialize;
 use serde_json::Value;
+use utoipa::{IntoParams, ToSchema};
 
 use crate::model::content::Content;
 
-#[derive(Debug, Deserialize, new)]
+#[derive(Debug, Deserialize, new, IntoParams, ToSchema)]
 pub struct CreateContent {
     pub content_model_id: String,
     pub field_values: Value,

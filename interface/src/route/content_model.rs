@@ -1,4 +1,5 @@
 use axum::{routing, Router};
+
 use registry::AppRegistry;
 
 use crate::handler::content_model::{

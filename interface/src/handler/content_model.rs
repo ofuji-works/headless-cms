@@ -10,16 +10,31 @@ use application::usecase::content_model::{
 };
 use domain::model::content_model::ContentModel;
 use registry::AppRegistry;
+use utoipa::{IntoParams, ToSchema};
 
 use crate::handler::error::{AppError, AppResult};
 
-#[derive(Deserialize)]
-pub struct GetContentModelQuery {}
+#[derive(Deserialize, IntoParams, ToSchema)]
+pub struct GetContentModelQuery {
+    pub limit: usize,
+}
 
+#[utoipa::path(
+    get,
+    path = "/content_models",
+    params(GetContentModelQuery), 
+    responses(
+        (status = 200, description = "Get content model success", body = [ContentModel])
+    ),
+    tag = "content_models",
+)]
 pub async fn get_content_models(
     State(registry): State<AppRegistry>,
-    Query(_): Query<GetContentModelQuery>,
+    Query(query): Query<GetContentModelQuery>,
 ) -> AppResult<Json<Vec<ContentModel>>> {
+    let GetContentModelQuery {
+        limit: _
+    } = query;
     let usecase = ContentModelUsecase::new(registry.content_model_repository());
     let result = usecase.get().await;
 
@@ -30,8 +45,17 @@ pub async fn get_content_models(
     Err(AppError::EntityNotFound("".into()))
 }
 
-type CreateContentModelJson = CreateContentModelInput;
+pub type CreateContentModelJson = CreateContentModelInput;
 
+#[utoipa::path(
+    post,
+    path = "/content_models",
+    request_body = CreateContentModelJson,
+    responses(
+        (status = 200, description = "Create content model success"),
+    ),
+    tag = "content_models",
+)]
 pub async fn create_content_model(
     State(registry): State<AppRegistry>,
     Json(content_model): Json<CreateContentModelJson>,
@@ -46,7 +70,7 @@ pub async fn create_content_model(
     Err(AppError::CreateRecordError)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams, ToSchema)]
 pub struct UpdateContentModelJson {
     pub name: Option<String>,
     pub api_identifier: Option<String>,
@@ -54,6 +78,18 @@ pub struct UpdateContentModelJson {
     pub fields: Option<Value>,
 }
 
+#[utoipa::path(
+    put,
+    path = "/content_models/{id}",
+    params(
+        ("id" = String, Path, description = "Content model ID"),
+    ),
+    request_body = UpdateContentModelJson,
+    responses(
+        (status = 200, description = "Update content model success"),
+    ),
+    tag = "content_models",
+)]
 pub async fn update_content_model(
     State(registry): State<AppRegistry>,
     Path(id): Path<String>,
@@ -78,6 +114,17 @@ pub async fn update_content_model(
     Err(AppError::UpdateRecordError)
 }
 
+#[utoipa::path(
+    delete,
+    path = "/content_models/{id}",
+    params(
+        ("id" = String, Path, description = "Content model ID")
+    ),
+    responses(
+        (status = 200, description = "Delete content model success"),
+    ),
+    tag = "content_models",
+)]
 pub async fn delete_content_model(
     State(registry): State<AppRegistry>,
     Path(id): Path<String>,
