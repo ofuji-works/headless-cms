@@ -24,13 +24,14 @@ command = "cargo"
 args = ["clippy", "--all", "--all-targets", "${@}"]
 
 [tasks.watch]
-dependencies = ["compose-up-db-for-linux"]
+dependencies = ["compose-up-db"]
 run_task = [{ name = ["fmt", "clippy"] }]
 watch = true
 
 [tasks.run]
 command = "cargo"
 args = ["run", "${@}"]
+dependencies = ["compose-up-db"]
 
 [tasks.docker-run]
 command = "docker"
@@ -65,7 +66,7 @@ command = "sudo"
 args = ["docker-compose", "down", "-v"]
 
 [tasks.migrate]
-dependencies = ["compose-up-db-for-linux"]
+dependencies = ["compose-up-db"]
 install_crate = { crate_name = "sqlx-cli", binary = "sqlx", test_arg = "--help" }
 script = '''
 #!/bin/bash
@@ -75,7 +76,7 @@ done
 '''
 
 [tasks.migrate-revert]
-dependencies = ["compose-up-db-for-linux"]
+dependencies = ["compose-up-db"]
 command = "sqlx"
 args = ["migrate", "revert", "--source", "infrastructure/migrations"]
 
@@ -85,12 +86,12 @@ command = "sqlx"
 args = ["${@}", "--source", "infrastructure/migrations"]
 
 [tasks.psql]
-command = "sudo"
+command = "docker"
 args = [
-  "docker", "run", "-it", "--rm",
+  "run", "-it", "--rm",
   "--network", "host",
   "-v", "${PWD}:/work",
   "postgres:15", "psql", "${DATABASE_URL}",
-  "-f", "/work/data/initial_setup.sql"
+  "${@}"
 ]
 
