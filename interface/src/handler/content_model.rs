@@ -32,9 +32,7 @@ pub async fn get_content_models(
     State(registry): State<AppRegistry>,
     Query(query): Query<GetContentModelQuery>,
 ) -> AppResult<Json<Vec<ContentModel>>> {
-    let GetContentModelQuery {
-        limit: _
-    } = query;
+    let GetContentModelQuery { limit: _ } = query;
     let usecase = ContentModelUsecase::new(registry.content_model_repository());
     let result = usecase.get().await;
 
