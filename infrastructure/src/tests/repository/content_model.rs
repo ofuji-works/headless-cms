@@ -30,8 +30,6 @@ fn create_success(pool: sqlx::PgPool) -> Result<()> {
     );
     let result = repository.create(create_data).await;
 
-    println!("{:?}", result);
-
     assert_eq!(result.is_ok(), true);
 
     Ok(())
