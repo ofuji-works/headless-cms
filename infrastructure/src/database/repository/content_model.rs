@@ -80,7 +80,7 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
                     content_model (
                         name,
                         api_identifier,
-                        description,
+                        description
                     )
                 VALUES
                     ($1, $2, $3)
