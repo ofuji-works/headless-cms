@@ -20,11 +20,11 @@ impl ContentModelUsecase {
         self.repository.clone().get().await
     }
 
-    pub async fn create(&self, input: CreateContentModelInput) -> Result<()> {
+    pub async fn create(&self, input: CreateContentModelInput) -> Result<ContentModel> {
         self.repository.clone().create(input).await
     }
 
-    pub async fn update(&self, input: UpdateContentModelInput) -> Result<()> {
+    pub async fn update(&self, input: UpdateContentModelInput) -> Result<ContentModel> {
         self.repository.clone().update(input).await
     }
 

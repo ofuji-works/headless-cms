@@ -21,6 +21,7 @@ pub struct UpdateContentModel {
     pub description: Option<String>,
 }
 
+#[mockall::automock]
 #[async_trait]
 pub trait ContentModelRepository: Send + Sync {
     async fn get(&self) -> Result<Vec<ContentModel>>;
