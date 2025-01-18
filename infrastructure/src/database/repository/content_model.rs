@@ -4,7 +4,7 @@ use anyhow::{bail, Error, Result};
 use async_trait::async_trait;
 use derive_new::new;
 use domain::{
-    model::{content_model::ContentModel, field_meta::FieldMeta},
+    model::content_model::ContentModel,
     repository::content_model::{ContentModelRepository, CreateContentModel, UpdateContentModel},
 };
 use sqlx::{
@@ -23,7 +23,6 @@ struct ContentModelRow {
     pub name: String,
     pub api_identifier: String,
     pub description: String,
-    pub fields: serde_json::Value,
     #[sqlx(skip)]
     #[allow(unused)]
     pub created_at: DateTime<Utc>,
@@ -34,23 +33,21 @@ struct ContentModelRow {
 
 impl TryFrom<ContentModelRow> for ContentModel {
     type Error = Error;
+
     fn try_from(row: ContentModelRow) -> Result<Self> {
         let ContentModelRow {
             content_model_id,
             name,
             api_identifier,
             description,
-            fields,
             ..
         } = row;
-        let field_metas: Vec<FieldMeta> = serde_json::from_value(fields)?;
 
         Ok(Self {
             id: content_model_id.into(),
             name,
             api_identifier,
             description: Some(description),
-            field_metas,
         })
     }
 }
@@ -71,31 +68,46 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
         rows.into_iter().map(ContentModel::try_from).collect()
     }
 
-    async fn create(&self, data: CreateContentModel) -> Result<()> {
+    async fn create(&self, data: CreateContentModel) -> Result<ContentModel> {
         let description = match data.description {
             Some(str) => str,
             None => "".into(),
         };
 
-        sqlx::query!(r#"
-            INSERT INTO content_model (name, api_identifier, description, fields) VALUES ($1, $2, $3, $4)
-        "#,
-            data.name,
-            data.api_identifier,
-            description,
-            data.fields,
-        ).execute(self.db.inner_ref()).await?;
+        let content_model_row = sqlx::query_as::<_, ContentModelRow>(
+            r#"
+                INSERT INTO
+                    content_model (
+                        name,
+                        api_identifier,
+                        description,
+                    )
+                VALUES
+                    ($1, $2, $3)
+                RETURNING
+                    content_model_id,
+                    name,
+                    api_identifier,
+                    description,
+                    created_at,
+                    updated_at
+            "#,
+        )
+        .bind(data.name)
+        .bind(data.api_identifier)
+        .bind(description)
+        .fetch_one(self.db.inner_ref())
+        .await?;
 
-        Ok(())
+        ContentModel::try_from(content_model_row)
     }
 
-    async fn update(&self, data: UpdateContentModel) -> Result<()> {
+    async fn update(&self, data: UpdateContentModel) -> Result<ContentModel> {
         let UpdateContentModel {
             id,
             name,
             api_identifier,
             description,
-            fields,
         } = data;
 
         let content_model_id = Uuid::from_str(&id)?;
@@ -114,23 +126,35 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
             set_params.push(format!("description = {}", description));
         }
 
-        if let Some(fields) = fields {
-            set_params.push(format!("fields = {}", fields));
-        }
-
         if set_params.len() < 1 {
             bail!("")
         }
 
         let update_params_str = set_params.join(",");
 
-        sqlx::query(r#"UPDATE content_model SET $1 WHERE content_model_id = $2"#)
-            .bind(update_params_str)
-            .bind(content_model_id)
-            .execute(self.db.inner_ref())
-            .await?;
+        let content_model_row = sqlx::query_as::<_, ContentModelRow>(
+            r#"
+                UPDATE
+                    content_model
+                SET
+                    $1
+                WHERE
+                    content_model_id = $2
+                RETURNING
+                    content_model_id,
+                    name,
+                    api_identifier,
+                    description,
+                    created_at,
+                    updated_at
+            "#,
+        )
+        .bind(update_params_str)
+        .bind(content_model_id)
+        .fetch_one(self.db.inner_ref())
+        .await?;
 
-        Ok(())
+        ContentModel::try_from(content_model_row)
     }
 
     async fn delete(&self, id: String) -> Result<()> {

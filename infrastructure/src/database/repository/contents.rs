@@ -11,7 +11,7 @@ use sqlx::{
 };
 
 use domain::{
-    model::{content::Content, content_model::ContentModel, field::Field, field_meta::FieldMeta},
+    model::{content::Content, content_model::ContentModel, field::Field},
     repository::content::{ContentRepository, CreateContent, UpdateContent},
 };
 
@@ -29,7 +29,6 @@ pub struct ContentRow {
     pub content_model_name: String,
     pub content_model_api_identifier: String,
     pub content_model_description: Option<String>,
-    pub field_metas: Value,
 }
 
 impl TryFrom<ContentRow> for Content {
@@ -46,16 +45,13 @@ impl TryFrom<ContentRow> for Content {
             content_model_name,
             content_model_api_identifier,
             content_model_description,
-            field_metas,
         } = row;
 
-        let deserialized_field_metas: Vec<FieldMeta> = serde_json::from_value(field_metas)?;
         let content_model = ContentModel::try_new(
             content_model_id.into(),
             content_model_name,
             content_model_api_identifier,
             content_model_description,
-            deserialized_field_metas,
         )?;
         let deserialized_field_values: Vec<Field> = serde_json::from_value(field_values)?;
         let published_at_str: Option<String> = match published_at {
@@ -96,8 +92,7 @@ impl ContentRepository for ContentRepositoryImpl {
                     m.content_model_id,
                     m.name AS content_model_name,
                     m.api_identifier AS content_model_api_identifier,
-                    m.description AS content_model_description,
-                    m.fields AS field_metas
+                    m.description AS content_model_description
                 FROM contents c 
                 INNER JOIN content_model m
                 ON c.content_model_id = m.content_model_id
