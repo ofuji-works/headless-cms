@@ -38,6 +38,4 @@ impl ContentModel {
             description,
         })
     }
-
-    pub fn json_preview() {}
 }
