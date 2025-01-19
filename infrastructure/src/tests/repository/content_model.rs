@@ -1,5 +1,3 @@
-use anyhow::Result;
-
 use domain::repository::content_model::{ContentModelRepository, CreateContentModel};
 
 use crate::database::{repository::content_model::ContentModelRepositoryImpl, ConnectionPool};
@@ -11,17 +9,15 @@ fn build_repository(pool: sqlx::PgPool) -> ContentModelRepositoryImpl {
 }
 
 #[sqlx::test(fixtures(path = "../fixtures", scripts("content_model")))]
-fn get_success(pool: sqlx::PgPool) -> Result<()> {
+fn get_success(pool: sqlx::PgPool) {
     let repository = build_repository(pool);
     let result = repository.get().await;
 
     assert_eq!(result.is_ok(), true);
-
-    Ok(())
 }
 
 #[sqlx::test]
-fn create_success(pool: sqlx::PgPool) -> Result<()> {
+fn create_success(pool: sqlx::PgPool) {
     let repository = build_repository(pool);
     let create_data = CreateContentModel::new(
         "sample1".into(),
@@ -31,6 +27,4 @@ fn create_success(pool: sqlx::PgPool) -> Result<()> {
     let result = repository.create(create_data).await;
 
     assert_eq!(result.is_ok(), true);
-
-    Ok(())
 }

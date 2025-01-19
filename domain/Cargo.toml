@@ -12,4 +12,3 @@ rstest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 utoipa.workspace = true
-

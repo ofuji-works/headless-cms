@@ -6,7 +6,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use application::usecase::content::{ContentUsecase, CreateContentInput, UpdateContentInput};
-use domain::model::content::Content;
+use domain::model::content::{Content, ContentStatus};
 use registry::AppRegistry;
 use utoipa::{IntoParams, ToSchema};
 
@@ -68,8 +68,8 @@ pub async fn create_content(
 #[derive(Deserialize, IntoParams, ToSchema)]
 pub struct UpdateContentJson {
     pub content_model_id: String,
-    pub field_values: Option<Value>,
-    pub is_draft: Option<bool>,
+    pub fields: Option<Value>,
+    pub status: Option<ContentStatus>,
 }
 
 #[utoipa::path(
@@ -93,11 +93,11 @@ pub async fn update_content(
 
     let UpdateContentJson {
         content_model_id,
-        field_values,
-        is_draft,
+        fields,
+        status,
     } = json;
 
-    let input = UpdateContentInput::new(id, content_model_id, field_values, is_draft);
+    let input = UpdateContentInput::new(id, content_model_id, fields, status);
     let result = usecase.update(input).await;
 
     if result.is_ok() {

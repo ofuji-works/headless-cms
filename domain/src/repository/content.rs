@@ -5,13 +5,13 @@ use serde::Deserialize;
 use serde_json::Value;
 use utoipa::{IntoParams, ToSchema};
 
-use crate::model::content::{Content, Status};
+use crate::model::content::{Content, ContentStatus};
 
 #[derive(Debug, Deserialize, new, IntoParams, ToSchema)]
 pub struct CreateContent {
     pub content_model_id: String,
     pub fields: Value,
-    pub status: Status,
+    pub status: ContentStatus,
 }
 
 #[derive(Debug, Deserialize, new)]
@@ -19,7 +19,7 @@ pub struct UpdateContent {
     pub id: String,
     pub content_model_id: String,
     pub fields: Option<Value>,
-    pub status: Option<Status>,
+    pub status: Option<ContentStatus>,
 }
 
 #[async_trait]

@@ -11,7 +11,10 @@ use sqlx::{
 };
 
 use domain::{
-    model::{content::Content, content_model::ContentModel, field::Field},
+    model::{
+        content::{Content, ContentStatus, Field},
+        content_model::ContentModel,
+    },
     repository::content::{ContentRepository, CreateContent, UpdateContent},
 };
 
@@ -20,8 +23,8 @@ use crate::database::ConnectionPool;
 #[derive(Debug, FromRow)]
 pub struct ContentRow {
     pub content_id: Uuid,
-    pub field_values: Value,
-    pub is_draft: bool,
+    pub fields: Value,
+    pub status: Value,
     pub published_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -36,8 +39,8 @@ impl TryFrom<ContentRow> for Content {
     fn try_from(row: ContentRow) -> Result<Self> {
         let ContentRow {
             content_id,
-            field_values,
-            is_draft,
+            fields,
+            status,
             published_at,
             created_at,
             updated_at,
@@ -53,7 +56,8 @@ impl TryFrom<ContentRow> for Content {
             content_model_api_identifier,
             content_model_description,
         )?;
-        let deserialized_field_values: Vec<Field> = serde_json::from_value(field_values)?;
+        let deserialized_status: ContentStatus = serde_json::from_value(status)?;
+        let deserialized_fields: Vec<Field> = serde_json::from_value(fields)?;
         let published_at_str: Option<String> = match published_at {
             Some(datetime) => Some(datetime.to_string()),
             None => None,
@@ -62,8 +66,8 @@ impl TryFrom<ContentRow> for Content {
         Ok(Self {
             id: content_id.to_string(),
             model: content_model,
-            is_draft,
-            field_values: deserialized_field_values,
+            status: deserialized_status,
+            fields: deserialized_fields,
             published_at: published_at_str,
             created_at: created_at.to_string(),
             updated_at: updated_at.to_string(),
@@ -84,8 +88,8 @@ impl ContentRepository for ContentRepositoryImpl {
             r#"
                 SELECT
                     c.content_id,
-                    c.field_values,
-                    c.is_draft,
+                    c.fields,
+                    c.status,
                     c.published_at,
                     c.created_at,
                     c.updated_at,
@@ -106,38 +110,35 @@ impl ContentRepository for ContentRepositoryImpl {
 
     async fn create(&self, data: CreateContent) -> Result<()> {
         let content_model_id = Uuid::parse_str(&data.content_model_id)?;
+        let status = serde_json::to_string(&data.status)?;
 
         sqlx::query!(
-            r#"INSERT INTO contents (content_model_id, field_values, is_draft) VALUES ($1, $2, $3)"#,    
+            r#"INSERT INTO contents (content_model_id, fields, status) VALUES ($1, $2, $3)"#,
             content_model_id,
-            data.field_values,
-            data.is_draft,
-        ).execute(self.db.inner_ref()).await?;
+            data.fields,
+            status,
+        )
+        .execute(self.db.inner_ref())
+        .await?;
 
         Ok(())
     }
 
     async fn update(&self, data: UpdateContent) -> Result<()> {
         let UpdateContent {
-            id,
-            field_values,
-            is_draft,
-            ..
+            id, fields, status, ..
         } = data;
 
         let parsed_content_id = Uuid::parse_str(&id)?;
 
         let mut set_params: Vec<String> = Vec::new();
 
-        if let Some(field_values) = field_values {
-            set_params.push(format!(
-                "field_values = {}",
-                serde_json::to_value(field_values)?
-            ));
+        if let Some(fields) = fields {
+            set_params.push(format!("fields = {}", serde_json::to_value(fields)?));
         }
 
-        if let Some(is_draft) = is_draft {
-            set_params.push(format!("is_draft = {}", is_draft));
+        if let Some(status) = status {
+            set_params.push(format!("status = {}", serde_json::to_string(&status)?));
         }
 
         if set_params.len() < 1 {

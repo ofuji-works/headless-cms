@@ -3,7 +3,6 @@ use axum::{
     response::Json,
 };
 use serde::Deserialize;
-use serde_json::Value;
 
 use application::usecase::content_model::{
     ContentModelUsecase, CreateContentModelInput, UpdateContentModelInput,
@@ -73,7 +72,6 @@ pub struct UpdateContentModelJson {
     pub name: Option<String>,
     pub api_identifier: Option<String>,
     pub description: Option<String>,
-    pub fields: Option<Value>,
 }
 
 #[utoipa::path(
@@ -99,10 +97,9 @@ pub async fn update_content_model(
         name,
         api_identifier,
         description,
-        fields,
     } = content_model;
 
-    let input = UpdateContentModelInput::new(id, name, api_identifier, description, fields);
+    let input = UpdateContentModelInput::new(id, name, api_identifier, description);
     let result = usecase.update(input).await;
 
     if result.is_ok() {

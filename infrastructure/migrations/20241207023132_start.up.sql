@@ -20,8 +20,8 @@ CREATE TRIGGER content_model_updated_at_trigger
 CREATE TABLE IF NOT EXISTS contents (
   content_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   content_model_id UUID NOT NULL,
-  field_values JSONB NOT NULL,
-  is_draft BOOLEAN NOT NULL, 
+  fields JSONB NOT NULL,
+  status VARCHAR(50) NOT NULL, 
   published_at TIMESTAMP(3) WITH TIME ZONE DEFAULT NULL,
   created_at TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3)

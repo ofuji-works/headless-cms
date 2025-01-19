@@ -20,7 +20,7 @@ pub struct Field {
 }
 
 #[derive(Debug, Deserialize, Serialize, new, ToSchema)]
-pub enum Status {
+pub enum ContentStatus {
     Draft,
     Published,
     Reserved,
@@ -31,7 +31,7 @@ pub enum Status {
 pub struct Content {
     pub id: String,
     pub model: ContentModel,
-    pub status: Status,
+    pub status: ContentStatus,
     pub fields: Vec<Field>,
     pub published_at: Option<String>,
     pub created_at: String,
