@@ -430,6 +430,7 @@ dependencies = [
  "async-trait",
  "derive-new",
  "mockall",
+ "rstest",
  "serde",
  "serde_json",
  "utoipa",
