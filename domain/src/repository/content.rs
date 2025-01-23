@@ -17,7 +17,7 @@ pub struct CreateContent {
 #[derive(Debug, Deserialize, new)]
 pub struct UpdateContent {
     pub id: String,
-    pub content_model_id: String,
+    pub content_model_id: Option<String>,
     pub fields: Option<Value>,
     pub status: Option<ContentStatus>,
 }
@@ -25,7 +25,7 @@ pub struct UpdateContent {
 #[async_trait]
 pub trait ContentRepository: Send + Sync {
     async fn get(&self) -> Result<Vec<Content>>;
-    async fn create(&self, data: CreateContent) -> Result<()>;
-    async fn update(&self, data: UpdateContent) -> Result<()>;
+    async fn create(&self, data: CreateContent) -> Result<Content>;
+    async fn update(&self, data: UpdateContent) -> Result<Content>;
     async fn delete(&self, id: String) -> Result<()>;
 }
