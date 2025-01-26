@@ -67,7 +67,7 @@ pub async fn create_content(
 
 #[derive(Deserialize, IntoParams, ToSchema)]
 pub struct UpdateContentJson {
-    pub content_model_id: String,
+    pub content_model_id: Option<String>,
     pub fields: Option<Value>,
     pub status: Option<ContentStatus>,
 }
