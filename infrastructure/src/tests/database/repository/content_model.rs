@@ -8,7 +8,7 @@ fn build_repository(pool: sqlx::PgPool) -> ContentModelRepositoryImpl {
     ContentModelRepositoryImpl::new(connection_pool)
 }
 
-#[sqlx::test(fixtures(path = "../fixtures", scripts("content_model")))]
+#[sqlx::test(fixtures(path = "../../fixtures", scripts("content_model")))]
 fn get_success(pool: sqlx::PgPool) {
     let repository = build_repository(pool);
     let result = repository.get().await;

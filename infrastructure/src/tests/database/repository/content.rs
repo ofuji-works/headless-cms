@@ -18,15 +18,17 @@ fn build_content_model_repository(pool: &sqlx::PgPool) -> ContentModelRepository
     ContentModelRepositoryImpl::new(connection_pool)
 }
 
-#[sqlx::test(fixtures(path = "../fixtures", scripts("content")))]
+#[sqlx::test(fixtures(path = "../../fixtures", scripts("content")))]
 fn get_success(pool: sqlx::PgPool) {
     let repository = build_content_repository(&pool);
     let result = repository.get().await;
 
+    println!("{:?}", result);
+
     assert_eq!(result.is_ok(), true);
 }
 
-#[sqlx::test(fixtures(path = "../fixtures", scripts("content_model")))]
+#[sqlx::test(fixtures(path = "../../fixtures", scripts("content_model")))]
 fn create_success(pool: sqlx::PgPool) {
     let content_model_repository = build_content_model_repository(&pool);
     let content_models = content_model_repository.get().await.unwrap();
@@ -42,7 +44,7 @@ fn create_success(pool: sqlx::PgPool) {
     assert_eq!(result.is_ok(), true);
 }
 
-#[sqlx::test(fixtures(path = "../fixtures", scripts("content")))]
+#[sqlx::test(fixtures(path = "../../fixtures", scripts("content")))]
 fn update_success(pool: sqlx::PgPool) {
     let repository = build_content_repository(&pool);
     let contents = repository.get().await.unwrap();

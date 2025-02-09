@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
 use infrastructure::database::{
+    connect_database_with,
     repository::{
         content_model::ContentModelRepositoryImpl, contents::ContentRepositoryImpl,
         health::HealthCheckRepositoryImpl,
     },
-    ConnectionPool,
 };
+use shared::config::AppConfig;
 
 #[derive(Clone)]
 pub struct AppRegistry {
@@ -16,7 +17,9 @@ pub struct AppRegistry {
 }
 
 impl AppRegistry {
-    pub fn new(pool: ConnectionPool) -> Self {
+    pub fn new(config: AppConfig) -> Self {
+        let pool = connect_database_with(config.database);
+
         let health_check_repository = Arc::new(HealthCheckRepositoryImpl::new(pool.clone()));
         let content_repository = Arc::new(ContentRepositoryImpl::new(pool.clone()));
         let content_model_repository = Arc::new(ContentModelRepositoryImpl::new(pool.clone()));

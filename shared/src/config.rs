@@ -10,8 +10,17 @@ pub struct DatabaseConfig {
     pub database: String,
 }
 
+#[derive(new)]
+pub struct StorageConfig {
+    pub access_key: String,
+    pub secret_key: String,
+    pub region: String,
+    pub endpoint: String,
+}
+
 pub struct AppConfig {
     pub database: DatabaseConfig,
+    pub storage: StorageConfig,
 }
 
 impl AppConfig {
@@ -24,6 +33,13 @@ impl AppConfig {
             std::env::var("DATABASE_NAME")?,
         );
 
-        Ok(Self { database })
+        let storage = StorageConfig::new(
+            std::env::var("STORAGE_ACCESS_KEY")?,
+            std::env::var("STORAGE_SECRET_KEY")?,
+            std::env::var("STORAGE_REGION")?,
+            std::env::var("STORAGE_ENDPOINT")?,
+        );
+
+        Ok(Self { database, storage })
     }
 }
