@@ -1,15 +1,25 @@
+env_files = [".env"]
+
 [env]
 APP_PORT = 8080
 REDIS_PORT = 6379
 POSTGRES_PORT = 5432
+STORAGE_PORT = 9000
+STORAGE_CONSOLE_PORT = 9090
 DATABASE_HOST = "localhost"
 DATABASE_USERNAME = "app"
 DATABASE_PASSWORD = "passw0rd"
 DATABASE_NAME = "app"
 DATABASE_URL = "postgresql://${DATABASE_HOST}:${POSTGRES_PORT}/${DATABASE_NAME}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}"
+STORAGE_ENDPOINT = "http://localhost:9000"
+STORAGE_USER = "minio_root"
+STORAGE_PASSWORD = "minio_password"
 
 [config]
 default_to_workspace = false
+
+[tasks.env]
+command = "printenv"
 
 [tasks.check]
 command = "cargo"
@@ -24,33 +34,45 @@ command = "cargo"
 args = ["clippy", "--all", "--all-targets", "${@}"]
 
 [tasks.watch]
-dependencies = ["compose-up-db"]
+dependencies = ["up-db"]
 run_task = [{ name = ["fmt", "clippy"] }]
 watch = true
 
 [tasks.run]
 command = "cargo"
 args = ["run", "${@}"]
-dependencies = ["compose-up-db"]
+dependencies = ["up-db"]
+
+[tasks.test]
+command = "cargo"
+args = ["test", "${@}"]
+dependencies = ["up-db"]
 
 [tasks.docker-run]
 command = "docker"
 args = ["compose", "up", "--build", "-d"]
 
-[tasks.compose-up-db]
+[tasks.up]
+dependencies = ["docker-run"]
+
+[tasks.up-db]
 command = "docker"
 args = ["compose", "up", "-d", "postgres"]
 
-[tasks.docker-down]
+[tasks.up-storage]
+command = "docker"
+args = ["compose", "up", "-d", "minio"]
+
+[tasks.down]
 command = "docker"
 args = ["compose", "down", "${@}"]
 
-[tasks.docker-remove]
+[tasks.remove]
 command = "docker"
 args = ["compose", "down", "-v"]
 
 [tasks.migrate]
-dependencies = ["compose-up-db"]
+dependencies = ["up-db"]
 install_crate = { crate_name = "sqlx-cli", binary = "sqlx", test_arg = "--help" }
 script = '''
 #!/bin/bash
@@ -60,7 +82,7 @@ done
 '''
 
 [tasks.migrate-revert]
-dependencies = ["compose-up-db"]
+dependencies = ["up-db"]
 command = "sqlx"
 args = ["migrate", "revert", "--source", "infrastructure/migrations"]
 
