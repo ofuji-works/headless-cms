@@ -113,15 +113,10 @@ pub struct ContentRepositoryImpl {
 #[async_trait]
 impl ContentRepository for ContentRepositoryImpl {
     async fn get(&self) -> Result<Vec<Content>> {
-        let rows: Vec<ContentRow> = sqlx::query_as::<_, ContentRow>(
+        let rows = sqlx::query_as::<_, ContentRow>(
             r#"
                 SELECT
-                    c.content_id,
-                    c.fields,
-                    c.status AS "status: ContentRowStatus",
-                    c.published_at,
-                    c.created_at,
-                    c.updated_at,
+                    c.*,
                     m.content_model_id,
                     m.name AS content_model_name,
                     m.api_identifier AS content_model_api_identifier,

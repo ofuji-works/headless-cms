@@ -23,8 +23,6 @@ fn get_success(pool: sqlx::PgPool) {
     let repository = build_content_repository(&pool);
     let result = repository.get().await;
 
-    println!("{:?}", result);
-
     assert_eq!(result.is_ok(), true);
 }
 
