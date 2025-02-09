@@ -61,7 +61,7 @@ pub struct ContentModelRepositoryImpl {
 impl ContentModelRepository for ContentModelRepositoryImpl {
     async fn get(&self) -> Result<Vec<ContentModel>> {
         let rows: Vec<ContentModelRow> =
-            sqlx::query_as!(ContentModelRow, r#"SELECT * FROM content_model"#)
+            sqlx::query_as::<_, ContentModelRow>(r#"SELECT * FROM content_model"#)
                 .fetch_all(self.db.inner_ref())
                 .await?;
 
@@ -160,12 +160,10 @@ impl ContentModelRepository for ContentModelRepositoryImpl {
     async fn delete(&self, id: String) -> Result<()> {
         let content_model_id = Uuid::from_str(&id)?;
 
-        sqlx::query!(
-            r#"DELETE FROM content_model WHERE content_model_id = $1"#,
-            content_model_id,
-        )
-        .execute(self.db.inner_ref())
-        .await?;
+        sqlx::query(r#"DELETE FROM content_model WHERE content_model_id = $1"#)
+            .bind(content_model_id)
+            .execute(self.db.inner_ref())
+            .await?;
 
         Ok(())
     }
