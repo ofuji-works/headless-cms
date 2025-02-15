@@ -13,9 +13,10 @@ async fn create_bucket_test() -> anyhow::Result<()> {
     let cli = StorageClient::new(config);
     let repo = MediaRepositoryImpl::new(cli);
 
-    let result = repo.create_bucket("test".into()).await?;
+    let result = repo.create_bucket("test".into()).await;
+    assert_eq!(result.is_ok(), true);
 
-    println!("{:?}", result);
+    repo.delete_bucket(result?).await?;
 
     Ok(())
 }
