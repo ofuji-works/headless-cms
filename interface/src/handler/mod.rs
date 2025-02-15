@@ -1,4 +1,9 @@
+pub mod auth;
 pub mod content;
 pub mod content_model;
 pub mod error;
 pub mod health;
+pub mod media;
+pub mod role;
+pub mod tag;
+pub mod user;
