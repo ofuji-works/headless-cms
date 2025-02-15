@@ -3,7 +3,7 @@ use std::sync::Arc;
 use infrastructure::database::{
     connect_database_with,
     repository::{
-        content_model::ContentModelRepositoryImpl, contents::ContentRepositoryImpl,
+        category::CategoryRepositoryImpl, contents::ContentRepositoryImpl,
         health::HealthCheckRepositoryImpl,
     },
 };
@@ -13,7 +13,7 @@ use shared::config::AppConfig;
 pub struct AppRegistry {
     health_check_repository: Arc<HealthCheckRepositoryImpl>,
     content_repository: Arc<ContentRepositoryImpl>,
-    content_model_repository: Arc<ContentModelRepositoryImpl>,
+    category_repository: Arc<CategoryRepositoryImpl>,
 }
 
 impl AppRegistry {
@@ -22,12 +22,12 @@ impl AppRegistry {
 
         let health_check_repository = Arc::new(HealthCheckRepositoryImpl::new(pool.clone()));
         let content_repository = Arc::new(ContentRepositoryImpl::new(pool.clone()));
-        let content_model_repository = Arc::new(ContentModelRepositoryImpl::new(pool.clone()));
+        let category_repository = Arc::new(CategoryRepositoryImpl::new(pool.clone()));
 
         Self {
             health_check_repository,
             content_repository,
-            content_model_repository,
+            category_repository,
         }
     }
 
@@ -39,7 +39,7 @@ impl AppRegistry {
         self.content_repository.clone()
     }
 
-    pub fn content_model_repository(&self) -> Arc<ContentModelRepositoryImpl> {
-        self.content_model_repository.clone()
+    pub fn category_repository(&self) -> Arc<CategoryRepositoryImpl> {
+        self.category_repository.clone()
     }
 }

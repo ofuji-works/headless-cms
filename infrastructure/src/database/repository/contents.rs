@@ -12,8 +12,8 @@ use sqlx::{
 
 use domain::{
     model::{
+        category::Category,
         content::{Content, ContentStatus, Field},
-        content_model::ContentModel,
     },
     repository::content::{ContentRepository, CreateContent, UpdateContent},
 };
@@ -53,39 +53,39 @@ impl From<ContentStatus> for ContentRowStatus {
 
 #[derive(Debug, FromRow)]
 pub struct ContentRow {
-    pub content_id: Uuid,
+    pub id: Uuid,
     pub fields: Value,
     pub status: ContentRowStatus,
     pub published_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub content_model_id: Uuid,
-    pub content_model_name: String,
-    pub content_model_api_identifier: String,
-    pub content_model_description: Option<String>,
+    pub category_id: Uuid,
+    pub category_name: String,
+    pub category_api_identifier: String,
+    pub category_description: Option<String>,
 }
 
 impl TryFrom<ContentRow> for Content {
     type Error = Error;
     fn try_from(row: ContentRow) -> Result<Self> {
         let ContentRow {
-            content_id,
+            id,
             fields,
             status,
             published_at,
             created_at,
             updated_at,
-            content_model_id,
-            content_model_name,
-            content_model_api_identifier,
-            content_model_description,
+            category_id,
+            category_name,
+            category_api_identifier,
+            category_description,
         } = row;
 
-        let content_model = ContentModel::try_new(
-            content_model_id.into(),
-            content_model_name,
-            content_model_api_identifier,
-            content_model_description,
+        let category = Category::try_new(
+            category_id.into(),
+            category_name,
+            category_api_identifier,
+            category_description,
         )?;
         let deserialized_fields: Vec<Field> = serde_json::from_value(fields)?;
         let published_at_str: Option<String> = match published_at {
@@ -94,8 +94,8 @@ impl TryFrom<ContentRow> for Content {
         };
 
         Ok(Self {
-            id: content_id.to_string(),
-            model: content_model,
+            id: id.to_string(),
+            category,
             status: status.into(),
             fields: deserialized_fields,
             published_at: published_at_str,
@@ -116,14 +116,13 @@ impl ContentRepository for ContentRepositoryImpl {
         let rows = sqlx::query_as::<_, ContentRow>(
             r#"
                 SELECT
-                    c.*,
-                    m.content_model_id,
-                    m.name AS content_model_name,
-                    m.api_identifier AS content_model_api_identifier,
-                    m.description AS content_model_description
-                FROM contents c 
-                INNER JOIN content_model m
-                ON c.content_model_id = m.content_model_id
+                    contents.*,
+                    category.name AS category_name,
+                    category.api_identifier AS category_api_identifier,
+                    category.description AS category_description
+                FROM contents 
+                INNER JOIN category
+                ON contents.category_id = category.id
             "#,
         )
         .fetch_all(self.db.inner_ref())
@@ -133,7 +132,7 @@ impl ContentRepository for ContentRepositoryImpl {
     }
 
     async fn create(&self, data: CreateContent) -> Result<Content> {
-        let content_model_id = Uuid::parse_str(&data.content_model_id)?;
+        let category_id = Uuid::parse_str(&data.category_id)?;
         let status: ContentRowStatus = data.status.into();
 
         let content_row = sqlx::query_as::<_, ContentRow>(
@@ -141,7 +140,7 @@ impl ContentRepository for ContentRepositoryImpl {
                 WITH inserted AS (
                     INSERT INTO
                         contents (
-                            content_model_id,
+                            category_id,
                             fields,
                             status
                         )
@@ -151,19 +150,18 @@ impl ContentRepository for ContentRepositoryImpl {
                 )
                 SELECT
                     inserted.*,
-                    content_model.content_model_id AS content_model_id,
-                    content_model.name AS content_model_name,
-                    content_model.api_identifier AS content_model_api_identifier,
-                    content_model.description AS content_model_description
+                    category.name AS category_name,
+                    category.api_identifier AS category_api_identifier,
+                    category.description AS category_description
                 FROM
                     inserted
                 JOIN
-                    content_model
+                    category
                 ON
-                    inserted.content_model_id = content_model.content_model_id
+                    inserted.category_id = category.id
             "#,
         )
-        .bind(content_model_id)
+        .bind(category_id)
         .bind(data.fields)
         .bind(status)
         .fetch_one(self.db.inner_ref())
@@ -191,13 +189,13 @@ impl ContentRepository for ContentRepositoryImpl {
             separated.push_bind_unseparated(content_row_status);
         }
 
-        query_builder.push(" FROM content_model WHERE contents.content_model_id = content_model.content_model_id AND");
+        query_builder.push(" FROM category WHERE contents.category_id = category.id AND");
 
         let parsed_content_id = Uuid::parse_str(&id)?;
-        query_builder.push(" content_id = ");
+        query_builder.push(" contents.id = ");
         query_builder.push_bind(parsed_content_id);
 
-        query_builder.push(" RETURNING contents.*, content_model.name AS content_model_name, content_model.api_identifier AS content_model_api_identifier, content_model.description AS content_model_description");
+        query_builder.push(" RETURNING contents.*, category.name AS category_name, category.api_identifier AS category_api_identifier, category.description AS category_description");
 
         let content_row = query_builder
             .build_query_as::<ContentRow>()
@@ -210,7 +208,7 @@ impl ContentRepository for ContentRepositoryImpl {
     async fn delete(&self, id: String) -> Result<()> {
         let parsed_content_id = Uuid::parse_str(&id)?;
 
-        sqlx::query(r#"DELETE FROM contents WHERE content_id = $1"#)
+        sqlx::query(r#"DELETE FROM contents WHERE id = $1"#)
             .bind(parsed_content_id)
             .execute(self.db.inner_ref())
             .await?;

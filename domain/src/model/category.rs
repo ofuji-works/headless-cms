@@ -3,14 +3,14 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[derive(Debug, Deserialize, Serialize, ToSchema, Clone)]
-pub struct ContentModel {
+pub struct Category {
     pub id: String,
     pub name: String,
     pub api_identifier: String,
     pub description: Option<String>,
 }
 
-impl ContentModel {
+impl Category {
     pub fn try_new(
         id: String,
         name: String,

@@ -1,4 +1,4 @@
-use crate::model::content_model::ContentModel;
+use crate::model::category::Category;
 
 #[rstest::rstest]
 #[case::all_fill("a".to_string().repeat(50), "a".to_string().repeat(64), Some("a".to_string().repeat(500)))]
@@ -8,7 +8,7 @@ fn content_model_new_success(
     #[case] api_identifier: String,
     #[case] description: Option<String>,
 ) {
-    let result = ContentModel::try_new("id".into(), name, api_identifier, description);
+    let result = Category::try_new("id".into(), name, api_identifier, description);
 
     assert_eq!(result.is_ok(), true);
 }
@@ -22,7 +22,7 @@ fn content_model_new_failure(
     #[case] api_identifier: String,
     #[case] description: Option<String>,
 ) {
-    let result = ContentModel::try_new("id".into(), name, api_identifier, description);
+    let result = Category::try_new("id".into(), name, api_identifier, description);
 
     assert_eq!(result.is_err(), true);
 }

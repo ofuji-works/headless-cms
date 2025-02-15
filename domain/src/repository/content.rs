@@ -9,7 +9,7 @@ use crate::model::content::{Content, ContentStatus};
 
 #[derive(Debug, Deserialize, new, IntoParams, ToSchema)]
 pub struct CreateContent {
-    pub content_model_id: String,
+    pub category_id: String,
     pub fields: Value,
     pub status: ContentStatus,
 }
@@ -17,7 +17,7 @@ pub struct CreateContent {
 #[derive(Debug, Deserialize, new)]
 pub struct UpdateContent {
     pub id: String,
-    pub content_model_id: Option<String>,
+    pub category_id: Option<String>,
     pub fields: Option<Value>,
     pub status: Option<ContentStatus>,
 }

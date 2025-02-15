@@ -1,4 +1,4 @@
-INSERT INTO content_model (
+INSERT INTO category (
   name,
   api_identifier,
   description
@@ -6,9 +6,9 @@ INSERT INTO content_model (
 VALUES(
   'sample1',
   'sample1',
-  'sample1 content model mock data'
+  'sample1 category mock data'
 );
-INSERT INTO content_model (
+INSERT INTO category (
   name,
   api_identifier,
   description
@@ -16,6 +16,6 @@ INSERT INTO content_model (
 VALUES(
   'sample2',
   'sample2',
-  'sample2 content model mock data'
+  'sample2 category mock data'
 );
 

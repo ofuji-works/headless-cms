@@ -2,7 +2,7 @@ use derive_new::new;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::model::content_model::ContentModel;
+use crate::model::category::Category;
 
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub enum FieldType {
@@ -30,7 +30,7 @@ pub enum ContentStatus {
 #[derive(Debug, Deserialize, Serialize, new, ToSchema)]
 pub struct Content {
     pub id: String,
-    pub model: ContentModel,
+    pub category: Category,
     pub status: ContentStatus,
     pub fields: Vec<Field>,
     pub published_at: Option<String>,

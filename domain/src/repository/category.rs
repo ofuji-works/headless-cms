@@ -4,17 +4,17 @@ use derive_new::new;
 use serde::Deserialize;
 use utoipa::{IntoParams, ToSchema};
 
-use crate::model::content_model::ContentModel;
+use crate::model::category::Category;
 
 #[derive(Debug, Deserialize, new, IntoParams, ToSchema)]
-pub struct CreateContentModel {
+pub struct CreateCategory {
     pub name: String,
     pub api_identifier: String,
     pub description: Option<String>,
 }
 
 #[derive(Debug, Deserialize, new, IntoParams, ToSchema)]
-pub struct UpdateContentModel {
+pub struct UpdateCategory {
     pub id: String,
     pub name: Option<String>,
     pub api_identifier: Option<String>,
@@ -23,9 +23,9 @@ pub struct UpdateContentModel {
 
 #[mockall::automock]
 #[async_trait]
-pub trait ContentModelRepository: Send + Sync {
-    async fn get(&self) -> Result<Vec<ContentModel>>;
-    async fn create(&self, data: CreateContentModel) -> Result<ContentModel>;
-    async fn update(&self, data: UpdateContentModel) -> Result<ContentModel>;
+pub trait CategoryRepository: Send + Sync {
+    async fn get(&self) -> Result<Vec<Category>>;
+    async fn create(&self, data: CreateCategory) -> Result<Category>;
+    async fn update(&self, data: UpdateCategory) -> Result<Category>;
     async fn delete(&self, id: String) -> Result<()>;
 }
