@@ -2,17 +2,14 @@ use axum::{
     extract::{Path, Query, State},
     response::Json,
 };
-use serde::Deserialize;
-use serde_json::Value;
 
 use application::usecase::content::{ContentUsecase, CreateContentInput, UpdateContentInput};
 use domain::model::content::{Content, ContentStatus};
 use registry::AppRegistry;
-use utoipa::{IntoParams, ToSchema};
 
 use crate::handler::error::{AppError, AppResult};
 
-#[derive(Deserialize, IntoParams, ToSchema)]
+#[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct GetContentQuery {
     pub limit: usize,
 }
@@ -65,10 +62,10 @@ pub async fn create_content(
     Err(AppError::CreateRecordError)
 }
 
-#[derive(Deserialize, IntoParams, ToSchema)]
+#[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct UpdateContentJson {
     pub content_model_id: Option<String>,
-    pub fields: Option<Value>,
+    pub fields: Option<serde_json::Value>,
     pub status: Option<ContentStatus>,
 }
 

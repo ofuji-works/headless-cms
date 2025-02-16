@@ -2,18 +2,16 @@ use axum::{
     extract::{Path, Query, State},
     response::Json,
 };
-use serde::Deserialize;
 
 use application::usecase::category::{
     CategoryUsecase, CreateCategoryInput, UpdateCategoryInput,
 };
 use domain::model::category::Category;
 use registry::AppRegistry;
-use utoipa::{IntoParams, ToSchema};
 
 use crate::handler::error::{AppError, AppResult};
 
-#[derive(Deserialize, IntoParams, ToSchema)]
+#[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct GetCategoryQuery {
     pub limit: usize,
 }
@@ -67,7 +65,7 @@ pub async fn create_category(
     Err(AppError::CreateRecordError)
 }
 
-#[derive(Deserialize, IntoParams, ToSchema)]
+#[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct UpdateCategoryJson {
     pub name: Option<String>,
     pub api_identifier: Option<String>,
