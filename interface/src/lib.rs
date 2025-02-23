@@ -10,8 +10,8 @@ use tokio::net::TcpListener;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
+use crate::route::category::build_category_routers;
 use crate::route::content::build_contents_routers;
-use crate::route::content_model::build_content_model_routers;
 use crate::route::health::build_health_check_routers;
 use crate::route::swagger::ApiDoc;
 
@@ -22,7 +22,7 @@ impl WebApp {
         let app = Router::new()
             .merge(build_health_check_routers())
             .merge(build_contents_routers())
-            .merge(build_content_model_routers())
+            .merge(build_category_routers())
             .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
             .with_state(registry);
 
