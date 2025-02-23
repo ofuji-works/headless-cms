@@ -47,9 +47,24 @@ services:
       - ${STORAGE_PORT}:${STORAGE_PORT}
       - ${STORAGE_CONSOLE_PORT}:${STORAGE_CONSOLE_PORT}
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: headless-cms_keycloak
+    ports:
+      - ${KEYCLOAK_PORT}:${KEYCLOAK_PORT}
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
+    command:
+      - start-dev
+    volumes:
+      - keycloak:/opt/keycloak/data
+
 volumes:
   db:
     driver: local
   storage:
+    driver: local
+  keycloak:
     driver: local
 
