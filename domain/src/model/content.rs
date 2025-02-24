@@ -1,10 +1,4 @@
-use derive_new::new;
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
-
-use crate::model::category::Category;
-
-#[derive(Debug, Deserialize, Serialize, ToSchema)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema)]
 pub enum FieldType {
     ShortText,
     LongText,
@@ -13,13 +7,19 @@ pub enum FieldType {
     Media,
 }
 
-#[derive(Debug, Deserialize, Serialize, new, ToSchema)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, derive_new::new, utoipa::ToSchema)]
 pub struct Field {
     pub field_type: FieldType,
     pub value: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, new, ToSchema)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, derive_new::new, utoipa::ToSchema)]
+pub struct Category {
+    id: String,
+    name: String,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, derive_new::new, utoipa::ToSchema)]
 pub enum ContentStatus {
     Draft,
     Published,
@@ -27,13 +27,27 @@ pub enum ContentStatus {
     Unpublished,
 }
 
-#[derive(Debug, Deserialize, Serialize, new, ToSchema)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema, Clone, derive_new::new)]
+pub struct CreatedBy {
+    id: String,
+    name: String,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema, Clone, derive_new::new)]
+pub struct UpdatedBy {
+    id: String,
+    name: String,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, derive_new::new, utoipa::ToSchema)]
 pub struct Content {
     pub id: String,
     pub category: Category,
     pub status: ContentStatus,
     pub fields: Vec<Field>,
     pub published_at: Option<String>,
+    pub created_by: CreatedBy,
+    pub updated_by: UpdatedBy,
     pub created_at: String,
     pub updated_at: String,
 }
