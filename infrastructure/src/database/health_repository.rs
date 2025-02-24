@@ -1,8 +1,6 @@
-use derive_new::new;
+use crate::database::connection::ConnectionPool;
 
-use crate::database::ConnectionPool;
-
-#[derive(new)]
+#[derive(derive_new::new)]
 pub struct HealthCheckRepositoryImpl {
     db: ConnectionPool,
 }

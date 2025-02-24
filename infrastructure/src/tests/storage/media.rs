@@ -1,6 +1,7 @@
 use shared::config::StorageConfig;
 
-use crate::storage::{repository::media::MediaRepositoryImpl, StorageClient};
+use crate::storage::client::StorageClient;
+use crate::storage::media::MediaRepositoryImpl;
 
 #[tokio::test]
 async fn create_bucket_test() -> anyhow::Result<()> {

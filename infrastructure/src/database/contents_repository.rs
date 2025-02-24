@@ -1,24 +1,10 @@
-use anyhow::{Error, Result};
-use async_trait::async_trait;
-use derive_new::new;
-use serde_json::Value;
-use sqlx::{
-    types::{
-        chrono::{DateTime, Utc},
-        Uuid,
-    },
-    FromRow,
-};
+use sqlx::types::chrono::{DateTime, Utc};
+use sqlx::types::Uuid;
 
-use domain::{
-    model::{
-        category::Category,
-        content::{Content, ContentStatus, Field},
-    },
-    repository::content::{ContentRepository, CreateContent, UpdateContent},
-};
+use domain::model::content::{Category, Content, ContentStatus, CreatedBy, Field, UpdatedBy};
+use domain::repository::content::{ContentRepository, CreateContent, UpdateContent};
 
-use crate::database::ConnectionPool;
+use crate::database::connection::ConnectionPool;
 
 #[derive(Debug, sqlx::Type)]
 #[sqlx(type_name = "content_status")]
@@ -51,23 +37,25 @@ impl From<ContentStatus> for ContentRowStatus {
     }
 }
 
-#[derive(Debug, FromRow)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct ContentRow {
     pub id: Uuid,
-    pub fields: Value,
+    pub fields: serde_json::Value,
     pub status: ContentRowStatus,
     pub published_at: Option<DateTime<Utc>>,
+    pub created_by_id: Uuid,
+    pub created_by_name: String,
+    pub updated_by_id: Uuid,
+    pub updated_by_name: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub category_id: Uuid,
     pub category_name: String,
-    pub category_api_identifier: String,
-    pub category_description: Option<String>,
 }
 
 impl TryFrom<ContentRow> for Content {
-    type Error = Error;
-    fn try_from(row: ContentRow) -> Result<Self> {
+    type Error = anyhow::Error;
+    fn try_from(row: ContentRow) -> anyhow::Result<Self> {
         let ContentRow {
             id,
             fields,
@@ -77,21 +65,21 @@ impl TryFrom<ContentRow> for Content {
             updated_at,
             category_id,
             category_name,
-            category_api_identifier,
-            category_description,
+            created_by_id,
+            created_by_name,
+            updated_by_id,
+            updated_by_name,
+            ..
         } = row;
 
-        let category = Category::try_new(
-            category_id.into(),
-            category_name,
-            category_api_identifier,
-            category_description,
-        )?;
+        let category = Category::new(category_id.into(), category_name);
         let deserialized_fields: Vec<Field> = serde_json::from_value(fields)?;
         let published_at_str: Option<String> = match published_at {
             Some(datetime) => Some(datetime.to_string()),
             None => None,
         };
+        let created_by = CreatedBy::new(created_by_id.into(), created_by_name);
+        let updated_by = UpdatedBy::new(updated_by_id.into(), updated_by_name);
 
         Ok(Self {
             id: id.to_string(),
@@ -101,28 +89,45 @@ impl TryFrom<ContentRow> for Content {
             published_at: published_at_str,
             created_at: created_at.to_string(),
             updated_at: updated_at.to_string(),
+            created_by,
+            updated_by,
         })
     }
 }
 
-#[derive(new)]
+#[derive(derive_new::new)]
 pub struct ContentRepositoryImpl {
     db: ConnectionPool,
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl ContentRepository for ContentRepositoryImpl {
-    async fn get(&self) -> Result<Vec<Content>> {
+    async fn get(&self) -> anyhow::Result<Vec<Content>> {
         let rows = sqlx::query_as::<_, ContentRow>(
             r#"
                 SELECT
                     contents.*,
                     category.name AS category_name,
                     category.api_identifier AS category_api_identifier,
-                    category.description AS category_description
-                FROM contents 
-                INNER JOIN category
-                ON contents.category_id = category.id
+                    category.description AS category_description,
+                    created_by.id AS created_by_id,
+                    created_by.name AS created_by_name,
+                    updated_by.id AS updated_by_id,
+                    updated_by.name AS updated_by_name
+                FROM
+                    contents 
+                JOIN
+                    category
+                ON
+                    contents.category_id = category.id
+                JOIN
+                    users AS created_by
+                ON
+                    created_by.id = contents.created_by
+                JOIN
+                    users AS updated_by
+                ON
+                    updated_by.id = contents.updated_by
             "#,
         )
         .fetch_all(self.db.inner_ref())
@@ -131,9 +136,19 @@ impl ContentRepository for ContentRepositoryImpl {
         rows.into_iter().map(Content::try_from).collect()
     }
 
-    async fn create(&self, data: CreateContent) -> Result<Content> {
-        let category_id = Uuid::parse_str(&data.category_id)?;
-        let status: ContentRowStatus = data.status.into();
+    async fn create(&self, data: CreateContent) -> anyhow::Result<Content> {
+        let CreateContent {
+            category_id,
+            fields,
+            status,
+            created_by_id,
+            updated_by_id,
+        } = data;
+
+        let category_id = Uuid::parse_str(&category_id)?;
+        let status: ContentRowStatus = status.into();
+        let created_by = Uuid::parse_str(&created_by_id)?;
+        let updated_by = Uuid::parse_str(&updated_by_id)?;
 
         let content_row = sqlx::query_as::<_, ContentRow>(
             r#"
@@ -142,9 +157,11 @@ impl ContentRepository for ContentRepositoryImpl {
                         contents (
                             category_id,
                             fields,
-                            status
+                            status,
+                            created_by,
+                            updated_by
                         )
-                    VALUES ($1, $2, $3)
+                    VALUES ($1, $2, $3, $4, $5)
                     RETURNING
                         contents.*
                 )
@@ -152,27 +169,46 @@ impl ContentRepository for ContentRepositoryImpl {
                     inserted.*,
                     category.name AS category_name,
                     category.api_identifier AS category_api_identifier,
-                    category.description AS category_description
+                    category.description AS category_description,
+                    created_by.id AS created_by_id,
+                    created_by.name AS created_by_name,
+                    updated_by.id AS updated_by_id,
+                    updated_by.name AS updated_by_name
                 FROM
                     inserted
                 JOIN
                     category
                 ON
-                    inserted.category_id = category.id
+                    category.id = inserted.category_id 
+                JOIN
+                    users AS created_by
+                ON
+                    created_by.id = inserted.created_by
+                JOIN
+                    users AS updated_by
+                ON
+                    updated_by.id = inserted.updated_by
+
             "#,
         )
         .bind(category_id)
-        .bind(data.fields)
+        .bind(fields)
         .bind(status)
+        .bind(created_by)
+        .bind(updated_by)
         .fetch_one(self.db.inner_ref())
         .await?;
 
         Content::try_from(content_row)
     }
 
-    async fn update(&self, data: UpdateContent) -> Result<Content> {
+    async fn update(&self, data: UpdateContent) -> anyhow::Result<Content> {
         let UpdateContent {
-            id, fields, status, ..
+            id,
+            fields,
+            status,
+            updated_by_id,
+            ..
         } = data;
 
         let mut query_builder = sqlx::QueryBuilder::<sqlx::Postgres>::new("UPDATE contents SET ");
@@ -189,13 +225,40 @@ impl ContentRepository for ContentRepositoryImpl {
             separated.push_bind_unseparated(content_row_status);
         }
 
-        query_builder.push(" FROM category WHERE contents.category_id = category.id AND");
+        let parsed_updated_by = Uuid::parse_str(&updated_by_id)?;
+        separated.push("updated_by = ");
+        separated.push_bind_unseparated(parsed_updated_by);
+
+        query_builder.push(
+            " FROM
+                category,
+                users AS created_by,
+                users AS updated_by
+            WHERE
+                contents.category_id = category.id 
+            AND 
+                created_by.id = contents.created_by
+            AND
+                updated_by.id = contents.updated_by
+            AND",
+        );
 
         let parsed_content_id = Uuid::parse_str(&id)?;
         query_builder.push(" contents.id = ");
         query_builder.push_bind(parsed_content_id);
 
-        query_builder.push(" RETURNING contents.*, category.name AS category_name, category.api_identifier AS category_api_identifier, category.description AS category_description");
+        query_builder.push(
+            " RETURNING
+                contents.*,
+                category.name AS category_name,
+                category.api_identifier AS category_api_identifier,
+                category.description AS category_description,
+                created_by.id AS created_by_id,
+                created_by.name AS created_by_name,
+                updated_by.id AS updated_by_id,
+                updated_by.name AS updated_by_name
+            ",
+        );
 
         let content_row = query_builder
             .build_query_as::<ContentRow>()
@@ -205,7 +268,7 @@ impl ContentRepository for ContentRepositoryImpl {
         Content::try_from(content_row)
     }
 
-    async fn delete(&self, id: String) -> Result<()> {
+    async fn delete(&self, id: String) -> anyhow::Result<()> {
         let parsed_content_id = Uuid::parse_str(&id)?;
 
         sqlx::query(r#"DELETE FROM contents WHERE id = $1"#)

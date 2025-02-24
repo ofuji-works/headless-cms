@@ -1,21 +1,29 @@
 INSERT INTO category (
   name,
   api_identifier,
-  description
+  description,
+  created_by,
+  updated_by
 )
 VALUES(
   'sample1',
   'sample1',
-  'sample1 category mock data'
+  'sample1 category mock data',
+  (SELECT id FROM users LIMIT 1),
+  (SELECT id FROM users LIMIT 1)
 );
 
 INSERT INTO contents (
   category_id,
   fields,
-  status
+  status,
+  created_by,
+  updated_by
 )
 VALUES(
   (SELECT id FROM category LIMIT 1),
   '[{"field_type": "ShortText", "value": "Blog Title"},{"field_type": "LongText","value": "Blog Content"}]',
-  'Draft'
+  'Draft',
+  (SELECT id FROM users LIMIT 1),
+  (SELECT id FROM users LIMIT 1)
 );

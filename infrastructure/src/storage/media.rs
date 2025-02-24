@@ -1,6 +1,6 @@
 use aws_sdk_s3::operation::create_bucket::CreateBucketOutput;
 
-use crate::storage::StorageClient;
+use crate::storage::client::StorageClient;
 
 #[derive(Debug)]
 pub struct Bucket {
