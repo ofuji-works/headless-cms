@@ -899,6 +899,7 @@ dependencies = [
  "rstest",
  "serde",
  "serde_json",
+ "url",
  "utoipa",
 ]
 
