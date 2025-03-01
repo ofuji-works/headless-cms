@@ -211,7 +211,12 @@ impl ContentRepository for ContentRepositoryImpl {
             ..
         } = data;
 
-        let mut query_builder = sqlx::QueryBuilder::<sqlx::Postgres>::new("UPDATE contents SET ");
+        let mut query_builder = sqlx::QueryBuilder::<sqlx::Postgres>::new(
+            "
+                WITH updated AS (
+                    UPDATE contents SET
+            ",
+        );
         let mut separated = query_builder.separated(",");
 
         if let Some(fields) = fields {
@@ -229,34 +234,37 @@ impl ContentRepository for ContentRepositoryImpl {
         separated.push("updated_by = ");
         separated.push_bind_unseparated(parsed_updated_by);
 
-        query_builder.push(
-            " FROM
-                category,
-                users AS created_by,
-                users AS updated_by
-            WHERE
-                contents.category_id = category.id 
-            AND 
-                created_by.id = contents.created_by
-            AND
-                updated_by.id = contents.updated_by
-            AND",
-        );
-
         let parsed_content_id = Uuid::parse_str(&id)?;
-        query_builder.push(" contents.id = ");
+        query_builder.push(" WHERE id = ");
         query_builder.push_bind(parsed_content_id);
 
         query_builder.push(
-            " RETURNING
-                contents.*,
-                category.name AS category_name,
-                category.api_identifier AS category_api_identifier,
-                category.description AS category_description,
-                created_by.id AS created_by_id,
-                created_by.name AS created_by_name,
-                updated_by.id AS updated_by_id,
-                updated_by.name AS updated_by_name
+            "
+                    RETURNING *
+                )
+                SELECT
+                    updated.*,
+                    category.name AS category_name,
+                    category.api_identifier AS category_api_identifier,
+                    category.description AS category_description,
+                    created_by.id AS created_by_id,
+                    created_by.name AS created_by_name,
+                    updated_by.id AS updated_by_id,
+                    updated_by.name AS updated_by_name
+                FROM
+                    updated
+                JOIN
+                    category
+                ON
+                    category.id = updated.category_id
+                JOIN
+                    users AS created_by
+                ON
+                    created_by.id = updated.created_by
+                JOIN
+                    users AS updated_by
+                ON
+                    updated_by.id = updated.updated_by
             ",
         );
 

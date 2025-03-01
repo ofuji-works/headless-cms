@@ -148,8 +148,12 @@ impl CategoryRepository for CategoryRepositoryImpl {
             updated_by_id,
         } = data;
 
-        let mut query_builder =
-            sqlx::QueryBuilder::<sqlx::Postgres>::new("UPDATE category AS c SET ");
+        let mut query_builder = sqlx::QueryBuilder::<sqlx::Postgres>::new(
+            "
+                WITH updated AS (
+                    UPDATE category SET
+            ",
+        );
         let mut separated = query_builder.separated(",");
 
         if let Some(name) = name {
@@ -171,29 +175,30 @@ impl CategoryRepository for CategoryRepositoryImpl {
         separated.push("updated_by = ");
         separated.push_bind_unseparated(parsed_updated_by);
 
-        query_builder.push(
-            " FROM
-                users AS created_by_user,
-                users AS updated_by_user
-            WHERE
-                created_by_user.id = c.created_by
-            AND
-                updated_by_user.id = c.updated_by 
-            AND
-            ",
-        );
-
         let category_id = Uuid::from_str(&id)?;
-        query_builder.push(" c.id = ");
+        query_builder.push(" WHERE id = ");
         query_builder.push_bind(category_id);
 
         query_builder.push(
-            " RETURNING
-                c.*,
-                created_by_user.id AS created_by_id, 
-                created_by_user.name AS created_by_name, 
-                updated_by_user.id AS updated_by_id, 
-                updated_by_user.name AS updated_by_name
+            "
+                    RETURNING *
+                )
+                SELECT
+                    updated.*,
+                    created_by.id AS created_by_id, 
+                    created_by.name AS created_by_name, 
+                    updated_by.id AS updated_by_id, 
+                    updated_by.name AS updated_by_name
+                FROM
+                    updated
+                JOIN
+                    users AS created_by
+                ON
+                    created_by.id = updated.created_by
+                JOIN
+                    users AS updated_by
+                ON
+                    updated_by.id = updated.updated_by 
             ",
         );
 

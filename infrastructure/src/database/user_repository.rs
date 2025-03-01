@@ -159,7 +159,12 @@ impl UserRepository for UserRepositoryImpl {
             role_id,
         } = update_user;
 
-        let mut query_builder = sqlx::QueryBuilder::<'_, sqlx::Postgres>::new("UPDATE users SET ");
+        let mut query_builder = sqlx::QueryBuilder::<'_, sqlx::Postgres>::new(
+            "
+                WITH updated AS (
+                    UPDATE users SET
+            ",
+        );
         let mut separated = query_builder.separated(",");
 
         if let Some(name) = name {
@@ -177,13 +182,27 @@ impl UserRepository for UserRepositoryImpl {
             separated.push_bind_unseparated(role_id);
         }
 
-        query_builder.push(" FROM role WHERE users.role_id = role.id AND ");
-
         let parsed_user_id = Uuid::parse_str(&id)?;
-        query_builder.push("users.id = ");
+        query_builder.push(" WHERE users.id = ");
         query_builder.push_bind(parsed_user_id);
 
-        query_builder.push(" RETURNING users.*, role.name AS role_name, role.description AS role_description, role.is_super_administrator AS role_is_super_administrator");
+        query_builder.push(
+            "
+                    RETURNING *
+                )
+                SELECT
+                    updated.*,
+                    role.name AS role_name,
+                    role.description AS role_description,
+                    role.is_super_administrator AS role_is_super_administrator
+                FROM
+                    updated
+                JOIN
+                    role
+                ON
+                    role.id = updated.role_id
+            ",
+        );
 
         let row = query_builder
             .build_query_as::<UserRow>()
