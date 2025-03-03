@@ -13,7 +13,11 @@ use crate::handler::error::{AppError, AppResult};
 
 #[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct GetCategoryQuery {
+    #[param(example = 0)]
+    pub offset: usize,
+    #[param(example = 100)]
     pub limit: usize,
+    pub keyword: Option<String>,
 }
 
 #[utoipa::path(
@@ -29,7 +33,7 @@ pub async fn get_categories(
     State(registry): State<AppRegistry>,
     Query(query): Query<GetCategoryQuery>,
 ) -> AppResult<Json<Vec<Category>>> {
-    let GetCategoryQuery { limit: _ } = query;
+    let GetCategoryQuery { .. } = query;
     let usecase = CategoryUsecase::new(registry.category_repository());
     let result = usecase.get().await;
 
@@ -40,23 +44,46 @@ pub async fn get_categories(
     Err(AppError::EntityNotFound("".into()))
 }
 
-pub type CreateCategoryJson = CreateCategoryInput;
+
+#[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
+pub struct CreateCategoryJson {
+    name: String,
+    api_identifier: String,
+    description: Option<String>
+}
+
+impl From<CreateCategoryJson> for CreateCategoryInput {
+    fn from(json: CreateCategoryJson) -> Self {
+        let CreateCategoryJson {name, api_identifier, description} = json;
+        let created_by_id: String = "id".into();
+        let updated_by_id: String = "id".into();
+
+        Self {
+            name,
+            api_identifier,
+            description,
+            created_by_id,
+            updated_by_id,
+        }
+    }
+}
 
 #[utoipa::path(
     post,
     path = "/categories",
     request_body = CreateCategoryJson,
     responses(
-        (status = 200, description = "Create category success"),
+        (status = 200, description = "Create category success", body = Category),
     ),
     tag = "categories",
 )]
 pub async fn create_category(
     State(registry): State<AppRegistry>,
-    Json(category): Json<CreateCategoryJson>,
+    Json(json): Json<CreateCategoryJson>,
 ) -> AppResult<()> {
+    let input = CreateCategoryInput::from(json);
     let usecase = CategoryUsecase::new(registry.category_repository());
-    let result = usecase.create(category).await;
+    let result = usecase.create(input).await;
 
     if result.is_ok() {
         return Ok(());
@@ -80,7 +107,7 @@ pub struct UpdateCategoryJson {
     ),
     request_body = UpdateCategoryJson,
     responses(
-        (status = 200, description = "Update category success"),
+        (status = 200, description = "Update category success", body = Category),
     ),
     tag = "categories",
 )]
@@ -97,7 +124,8 @@ pub async fn update_category(
         description,
     } = category;
 
-    let input = UpdateCategoryInput::new(id, name, api_identifier, description);
+    let mock_id: String = "id".into();
+    let input = UpdateCategoryInput::new(id, name, api_identifier, description, mock_id);
     let result = usecase.update(input).await;
 
     if result.is_ok() {

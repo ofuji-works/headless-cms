@@ -11,21 +11,27 @@ use crate::handler::error::{AppError, AppResult};
 
 #[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct GetContentQuery {
+    #[param(example = 0)]
+    pub offset: usize,
+    #[param(example = 100)]
     pub limit: usize,
+    pub keyword: Option<String>,
+    pub category: Option<String>,
+    pub tags: Option<Vec<String>>,
 }
 
 #[utoipa::path(
     get,
     path = "/contents",
     params(GetContentQuery),
-    responses((status = 200, description = "Get content success")),
+    responses((status = 200, description = "Get content success", body = [Content])),
     tag = "contents"
 )]
 pub async fn get_contents(
     State(registry): State<AppRegistry>,
     Query(query): Query<GetContentQuery>,
 ) -> AppResult<Json<Vec<Content>>> {
-    let GetContentQuery { limit: _ } = query;
+    let GetContentQuery { .. } = query;
 
     let usecase = ContentUsecase::new(registry.content_repository());
     let result = usecase.get().await;
@@ -37,14 +43,39 @@ pub async fn get_contents(
     Err(AppError::EntityNotFound("".into()))
 }
 
-type CreateContentJson = CreateContentInput;
+#[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
+pub struct CreateContentJson {
+    pub fields: serde_json::Value,
+    pub status: ContentStatus,
+    pub category_id: String,
+}
+
+impl From<CreateContentJson> for CreateContentInput {
+    fn from(json: CreateContentJson) -> Self {
+        let CreateContentJson {
+            fields,
+            status,
+            category_id,
+        } = json;
+        let created_by_id: String = "id".into();
+        let updated_by_id: String = "id".into();
+
+        Self {
+            fields,
+            status,
+            category_id,
+            created_by_id,
+            updated_by_id,
+        }
+    }
+}
 
 #[utoipa::path(
     post,
     path = "/contents",
     request_body = CreateContentJson,
     responses(
-        (status = 200, description = "Create content success")
+        (status = 200, description = "Create content success", body = Content)
     ),
     tag = "contents",
 )]
@@ -52,8 +83,9 @@ pub async fn create_content(
     State(registry): State<AppRegistry>,
     Json(json): Json<CreateContentJson>,
 ) -> AppResult<()> {
+    let input = CreateContentInput::from(json);
     let usecase = ContentUsecase::new(registry.content_repository());
-    let result = usecase.create(json).await;
+    let result = usecase.create(input).await;
 
     if result.is_ok() {
         return Ok(());
@@ -64,9 +96,9 @@ pub async fn create_content(
 
 #[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct UpdateContentJson {
-    pub content_model_id: Option<String>,
     pub fields: Option<serde_json::Value>,
     pub status: Option<ContentStatus>,
+    pub category_id: Option<String>,
 }
 
 #[utoipa::path(
@@ -77,7 +109,7 @@ pub struct UpdateContentJson {
     ),
     request_body = UpdateContentJson,
     responses(
-        (status = 200, description = "Update content success"),
+        (status = 200, description = "Update content success", body = Content),
     ),
     tag = "contents",
 )]
@@ -89,12 +121,13 @@ pub async fn update_content(
     let usecase = ContentUsecase::new(registry.content_repository());
 
     let UpdateContentJson {
-        content_model_id,
         fields,
         status,
+        category_id,
     } = json;
 
-    let input = UpdateContentInput::new(id, content_model_id, fields, status);
+    let mock_id: String = "id".into();
+    let input = UpdateContentInput::new(id, category_id, fields, status, mock_id);
     let result = usecase.update(input).await;
 
     if result.is_ok() {

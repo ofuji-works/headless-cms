@@ -1,31 +1,40 @@
-
 use super::error::AppResult;
 
-#[derive(utoipa::IntoParams)]
-pub struct GetTagQuery {}
+#[derive(utoipa::ToSchema)]
+pub struct Tag {
+    pub id: String,
+    pub name: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(utoipa::IntoParams, utoipa::ToSchema)]
+pub struct GetTagQuery {
+    #[param(example = 0)]
+    pub offset: usize,
+    #[param(example = 100)]
+    pub limit: usize,
+    pub keyword: Option<String>,
+}
 
 #[utoipa::path(
     get,
     path = "/tags",
     params(GetTagQuery), 
     responses(
-        (status = 200, description = "Get tag success", body = ())
+        (status = 200, description = "Get tag success", body = [Tag])
     ),
     tag = "tags",
 )]
-pub fn get_tag() -> AppResult<()> {
+pub fn get_tags() -> AppResult<()> {
     Ok(())
 }
-
-#[derive(utoipa::IntoParams)]
-pub struct FindTagQuery {}
 
 #[utoipa::path(
     get,
     path = "/tags/{id}",
-    params(FindTagQuery),
     responses(
-        (status = 200, description = "Find tag success", body = ())
+        (status = 200, description = "Find tag success", body = Tag)
     ),
     tag = "tags",
 )]
@@ -34,14 +43,16 @@ pub fn find_tag() -> AppResult<()> {
 }
 
 #[derive(utoipa::ToSchema)]
-pub struct CreateTagJson {}
+pub struct CreateTagJson {
+    pub name: String,
+}
 
 #[utoipa::path(
     post,
     path = "/tags",
     request_body = CreateTagJson,
     responses(
-        (status = 200, description = "Create tag success", body = ())
+        (status = 200, description = "Create tag success", body = Tag)
     ),
     tag = "tags",
 )]
@@ -50,14 +61,16 @@ pub fn create_tag() -> AppResult<()> {
 }
 
 #[derive(utoipa::ToSchema)]
-pub struct UpdateTagJson {}
+pub struct UpdateTagJson {
+    pub name: Option<String>
+}
 
 #[utoipa::path(
     put,
     path = "/tags/{id}",
     request_body = UpdateTagJson,
     responses(
-        (status = 200, description = "Update tag success", body = ())
+        (status = 200, description = "Update tag success", body = Tag)
     ),
     tag = "tags",
 )]

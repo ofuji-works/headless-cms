@@ -1,12 +1,9 @@
 use std::sync::Arc;
 
-use infrastructure::database::{
-    connect_database_with,
-    repository::{
-        category::CategoryRepositoryImpl, contents::ContentRepositoryImpl,
-        health::HealthCheckRepositoryImpl,
-    },
-};
+use infrastructure::database::category_repository::CategoryRepositoryImpl;
+use infrastructure::database::connection::connect_database_with;
+use infrastructure::database::contents_repository::ContentRepositoryImpl;
+use infrastructure::database::health_repository::HealthCheckRepositoryImpl;
 use shared::config::AppConfig;
 
 #[derive(Clone)]
