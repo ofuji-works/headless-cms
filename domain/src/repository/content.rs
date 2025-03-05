@@ -4,6 +4,7 @@ use crate::model::content::{Content, ContentStatus};
 pub struct CreateContent {
     pub category_id: String,
     pub fields: serde_json::Value,
+    pub tag_ids: Vec<String>,
     pub status: ContentStatus,
     pub created_by_id: String,
     pub updated_by_id: String,

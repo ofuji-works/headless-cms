@@ -1,13 +1,16 @@
 use domain::model::category::Category;
 use domain::model::content::{ContentStatus, Field, FieldType};
+use domain::model::tag::Tag;
 use domain::model::user::User;
 use domain::repository::category::CategoryRepository;
 use domain::repository::content::{ContentRepository, CreateContent, UpdateContent};
+use domain::repository::tag::{GetTagQuery, TagRepository};
 use domain::repository::user::{GetUserQuery, UserRepository};
 
 use crate::database::category_repository::CategoryRepositoryImpl;
 use crate::database::connection::ConnectionPool;
 use crate::database::contents_repository::ContentRepositoryImpl;
+use crate::database::tag_repository::TagRepositoryImpl;
 use crate::database::user_repository::UserRepositoryImpl;
 
 async fn get_user(pool: &sqlx::PgPool) -> User {
@@ -27,24 +30,42 @@ async fn get_category(pool: &sqlx::PgPool) -> Category {
     categories.get(0).unwrap().clone()
 }
 
+async fn get_tags(pool: &sqlx::PgPool) -> Vec<Tag> {
+    let connection_pool = ConnectionPool::new(pool.clone());
+    let repo = TagRepositoryImpl::new(connection_pool);
+    let query = GetTagQuery::new(0, 10);
+
+    repo.get(query).await.unwrap()
+}
+
 fn build_repository(pool: &sqlx::PgPool) -> ContentRepositoryImpl {
     let connection_pool = ConnectionPool::new(pool.clone());
 
     ContentRepositoryImpl::new(connection_pool)
 }
 
-#[sqlx::test(fixtures(path = "../fixtures", scripts("users", "content")))]
+#[sqlx::test(fixtures(
+    path = "../fixtures",
+    scripts("users", "content", "tags", "content_tags")
+))]
 fn get_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
     let result = repository.get().await;
 
+    println!("{:?}", result);
+
     assert_eq!(result.is_ok(), true);
 }
 
-#[sqlx::test(fixtures(path = "../fixtures", scripts("users", "category")))]
+#[sqlx::test(fixtures(path = "../fixtures", scripts("users", "category", "tags")))]
 fn create_success(pool: sqlx::PgPool) {
     let user = get_user(&pool).await;
     let category = get_category(&pool).await;
+    let tag_ids = get_tags(&pool)
+        .await
+        .iter()
+        .map(|t| t.id.to_string())
+        .collect::<Vec<_>>();
 
     let content_repository = build_repository(&pool);
     let field = Field::new(FieldType::ShortText, "title".into());
@@ -52,16 +73,22 @@ fn create_success(pool: sqlx::PgPool) {
     let create_content = CreateContent::new(
         category.id.to_string(),
         fields,
+        tag_ids,
         ContentStatus::Draft,
         user.id.clone(),
         user.id.clone(),
     );
     let result = content_repository.create(create_content).await;
 
+    println!("{:?}", result);
+
     assert_eq!(result.is_ok(), true);
 }
 
-#[sqlx::test(fixtures(path = "../fixtures", scripts("users", "content")))]
+#[sqlx::test(fixtures(
+    path = "../fixtures",
+    scripts("users", "content", "tags", "content_tags")
+))]
 fn update_success(pool: sqlx::PgPool) {
     let user = get_user(&pool).await;
     let repository = build_repository(&pool);
@@ -77,6 +104,24 @@ fn update_success(pool: sqlx::PgPool) {
     );
 
     let result = repository.update(update_content).await;
+
+    println!("{:?}", result);
+
+    assert_eq!(result.is_ok(), true);
+}
+
+#[sqlx::test(fixtures(
+    path = "../fixtures",
+    scripts("users", "content", "tags", "content_tags")
+))]
+fn delete_success(pool: sqlx::PgPool) {
+    let repository = build_repository(&pool);
+    let contents = repository.get().await.unwrap();
+    let content = contents.get(0).unwrap();
+
+    let result = repository.delete(content.id.clone()).await;
+
+    println!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }

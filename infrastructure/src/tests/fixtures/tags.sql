@@ -1,18 +1,7 @@
 INSERT INTO
-  tags (name)
+  tags (name, description)
 VALUES 
-  ('tag1'),
-  ('tag2'),
-  ('tag3'),
-  ('tag4');
-
-INSERT INTO
-  content_tags (content_id, tag_id)
-SELECT 
-    (SELECT id FROM contents LIMIT 1), id 
-FROM
-  tags 
-WHERE
-  name
-IN
-  ('tag1', 'tag2', 'tag3', 'tag4');
+  ('tag1', 'tag1 tag'),
+  ('tag2', 'tag2 tag'),
+  ('tag3', 'tag3 tag'),
+  ('tag4', 'tag4 tag');

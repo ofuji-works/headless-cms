@@ -72,10 +72,10 @@ impl CategoryRepository for CategoryRepositoryImpl {
                     updated_by.id AS updated_by_id,
                     updated_by.name AS updated_by_name
                 FROM category 
-                JOIN users AS created_by 
-                ON created_by.id = category.created_by
-                JOIN users AS updated_by 
-                ON updated_by.id = category.updated_by
+                JOIN
+                    users AS created_by ON created_by.id = category.created_by
+                JOIN
+                    users AS updated_by ON updated_by.id = category.updated_by
             "#,
         )
         .fetch_all(self.db.inner_ref())
@@ -122,10 +122,10 @@ impl CategoryRepository for CategoryRepositoryImpl {
                     updated_by.id AS updated_by_id,
                     updated_by.name AS updated_by_name
                 FROM inserted 
-                JOIN users AS created_by 
-                ON created_by.id = inserted.created_by
-                JOIN users AS updated_by 
-                ON updated_by.id = inserted.updated_by
+                JOIN
+                    users AS created_by ON created_by.id = inserted.created_by
+                JOIN
+                    users AS updated_by ON updated_by.id = inserted.updated_by
             "#,
         )
         .bind(name)
@@ -192,13 +192,9 @@ impl CategoryRepository for CategoryRepositoryImpl {
                 FROM
                     updated
                 JOIN
-                    users AS created_by
-                ON
-                    created_by.id = updated.created_by
+                    users AS created_by ON created_by.id = updated.created_by
                 JOIN
-                    users AS updated_by
-                ON
-                    updated_by.id = updated.updated_by 
+                    users AS updated_by ON updated_by.id = updated.updated_by 
             ",
         );
 

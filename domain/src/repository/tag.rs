@@ -1,15 +1,18 @@
 use crate::model::tag::Tag;
 
+#[derive(derive_new::new)]
 pub struct GetTagQuery {
     pub offset: i32,
     pub limit: i32,
 }
 
+#[derive(derive_new::new)]
 pub struct CreateTag {
     pub name: String,
     pub description: Option<String>,
 }
 
+#[derive(derive_new::new)]
 pub struct UpdateTag {
     pub id: String,
     pub name: Option<String>,

@@ -1,7 +1,11 @@
+use std::str::FromStr;
+
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
 
-use domain::model::content::{Category, Content, ContentStatus, CreatedBy, Field, UpdatedBy};
+use domain::model::content::{
+    Categories, Content, ContentStatus, CreatedBy, Field, Tags, UpdatedBy,
+};
 use domain::repository::content::{ContentRepository, CreateContent, UpdateContent};
 
 use crate::database::connection::ConnectionPool;
@@ -41,6 +45,7 @@ impl From<ContentStatus> for ContentRowStatus {
 pub struct ContentRow {
     pub id: Uuid,
     pub fields: serde_json::Value,
+    pub tags: serde_json::Value,
     pub status: ContentRowStatus,
     pub published_at: Option<DateTime<Utc>>,
     pub created_by_id: Uuid,
@@ -59,6 +64,7 @@ impl TryFrom<ContentRow> for Content {
         let ContentRow {
             id,
             fields,
+            tags,
             status,
             published_at,
             created_at,
@@ -72,8 +78,9 @@ impl TryFrom<ContentRow> for Content {
             ..
         } = row;
 
-        let category = Category::new(category_id.into(), category_name);
+        let categories = Categories::new(category_id.into(), category_name);
         let deserialized_fields: Vec<Field> = serde_json::from_value(fields)?;
+        let deserialized_tags: Vec<Tags> = serde_json::from_value(tags)?;
         let published_at_str: Option<String> = match published_at {
             Some(datetime) => Some(datetime.to_string()),
             None => None,
@@ -83,9 +90,10 @@ impl TryFrom<ContentRow> for Content {
 
         Ok(Self {
             id: id.to_string(),
-            category,
+            categories,
             status: status.into(),
             fields: deserialized_fields,
+            tags: deserialized_tags,
             published_at: published_at_str,
             created_at: created_at.to_string(),
             updated_at: updated_at.to_string(),
@@ -113,21 +121,40 @@ impl ContentRepository for ContentRepositoryImpl {
                     created_by.id AS created_by_id,
                     created_by.name AS created_by_name,
                     updated_by.id AS updated_by_id,
-                    updated_by.name AS updated_by_name
+                    updated_by.name AS updated_by_name,
+                    COALESCE(json_agg(json_build_object('id', tags.id, 'name', tags.name)) 
+                        FILTER (WHERE tags.id IS NOT NULL), '[]'::json) AS tags
                 FROM
                     contents 
                 JOIN
-                    category
-                ON
-                    contents.category_id = category.id
+                    category ON contents.category_id = category.id
                 JOIN
-                    users AS created_by
-                ON
-                    created_by.id = contents.created_by
+                    users AS created_by ON created_by.id = contents.created_by
                 JOIN
-                    users AS updated_by
-                ON
-                    updated_by.id = contents.updated_by
+                    users AS updated_by ON updated_by.id = contents.updated_by
+                JOIN
+                    content_tags ON contents.id = content_tags.content_id
+                JOIN
+                    tags ON tags.id = content_tags.tag_id
+                GROUP BY
+                    contents.id,
+                    contents.fields,
+                    contents.status,
+                    contents.category_id,
+                    contents.published_at,
+                    contents.created_at,
+                    contents.updated_at,
+                    contents.created_by,
+                    contents.updated_by,
+                    category.name,
+                    category.api_identifier,
+                    category.description,
+                    created_by.id,
+                    created_by.name,
+                    updated_by.id,
+                    updated_by.name
+                ORDER BY
+                    contents.created_at DESC
             "#,
         )
         .fetch_all(self.db.inner_ref())
@@ -141,6 +168,7 @@ impl ContentRepository for ContentRepositoryImpl {
             category_id,
             fields,
             status,
+            tag_ids,
             created_by_id,
             updated_by_id,
         } = data;
@@ -149,6 +177,10 @@ impl ContentRepository for ContentRepositoryImpl {
         let status: ContentRowStatus = status.into();
         let created_by = Uuid::parse_str(&created_by_id)?;
         let updated_by = Uuid::parse_str(&updated_by_id)?;
+        let tag_uuids: Vec<uuid::Uuid> = tag_ids
+            .into_iter()
+            .map(|id| uuid::Uuid::from_str(&id))
+            .collect::<Result<Vec<_>, _>>()?;
 
         let content_row = sqlx::query_as::<_, ContentRow>(
             r#"
@@ -164,6 +196,19 @@ impl ContentRepository for ContentRepositoryImpl {
                     VALUES ($1, $2, $3, $4, $5)
                     RETURNING
                         contents.*
+                ),
+                inserted_tags AS (
+                    INSERT INTO
+                        content_tags (content_id, tag_id)
+                    SELECT
+                        inserted.id,
+                        tags.id
+                    FROM
+                        inserted
+                    JOIN
+                        tags ON tags.id = ANY($6)
+                    RETURNING
+                        *
                 )
                 SELECT
                     inserted.*,
@@ -173,22 +218,38 @@ impl ContentRepository for ContentRepositoryImpl {
                     created_by.id AS created_by_id,
                     created_by.name AS created_by_name,
                     updated_by.id AS updated_by_id,
-                    updated_by.name AS updated_by_name
+                    updated_by.name AS updated_by_name,
+                    COALESCE(json_agg(json_build_object('id', tags.id, 'name', tags.name)) 
+                        FILTER (WHERE tags.id IS NOT NULL), '[]'::json) AS tags
                 FROM
                     inserted
                 JOIN
-                    category
-                ON
-                    category.id = inserted.category_id 
+                    category ON category.id = inserted.category_id 
                 JOIN
-                    users AS created_by
-                ON
-                    created_by.id = inserted.created_by
+                    users AS created_by ON created_by.id = inserted.created_by
                 JOIN
-                    users AS updated_by
-                ON
-                    updated_by.id = inserted.updated_by
-
+                    users AS updated_by ON updated_by.id = inserted.updated_by
+                JOIN
+                    inserted_tags ON inserted.id = inserted_tags.content_id
+                JOIN
+                    tags ON tags.id = inserted_tags.tag_id
+                GROUP BY
+                    inserted.id,
+                    inserted.fields,
+                    inserted.status,
+                    inserted.category_id,
+                    inserted.published_at,
+                    inserted.created_at,
+                    inserted.updated_at,
+                    inserted.created_by,
+                    inserted.updated_by,
+                    category.name,
+                    category.api_identifier,
+                    category.description,
+                    created_by.id,
+                    created_by.name,
+                    updated_by.id,
+                    updated_by.name
             "#,
         )
         .bind(category_id)
@@ -196,6 +257,7 @@ impl ContentRepository for ContentRepositoryImpl {
         .bind(status)
         .bind(created_by)
         .bind(updated_by)
+        .bind(tag_uuids)
         .fetch_one(self.db.inner_ref())
         .await?;
 
@@ -250,21 +312,38 @@ impl ContentRepository for ContentRepositoryImpl {
                     created_by.id AS created_by_id,
                     created_by.name AS created_by_name,
                     updated_by.id AS updated_by_id,
-                    updated_by.name AS updated_by_name
+                    updated_by.name AS updated_by_name,
+                    COALESCE(json_agg(json_build_object('id', tags.id, 'name', tags.name)) 
+                        FILTER (WHERE tags.id IS NOT NULL), '[]'::json) AS tags
                 FROM
                     updated
                 JOIN
-                    category
-                ON
-                    category.id = updated.category_id
+                    category ON category.id = updated.category_id
                 JOIN
-                    users AS created_by
-                ON
-                    created_by.id = updated.created_by
+                    users AS created_by ON created_by.id = updated.created_by
                 JOIN
-                    users AS updated_by
-                ON
-                    updated_by.id = updated.updated_by
+                    users AS updated_by ON updated_by.id = updated.updated_by
+                JOIN
+                    content_tags ON updated.id = content_tags.content_id
+                JOIN
+                    tags ON tags.id = content_tags.tag_id
+                GROUP BY
+                    updated.id,
+                    updated.fields,
+                    updated.status,
+                    updated.category_id,
+                    updated.published_at,
+                    updated.created_at,
+                    updated.updated_at,
+                    updated.created_by,
+                    updated.updated_by,
+                    category.name,
+                    category.api_identifier,
+                    category.description,
+                    created_by.id,
+                    created_by.name,
+                    updated_by.id,
+                    updated_by.name
             ",
         );
 

@@ -35,6 +35,7 @@ impl From<TagRow> for Tag {
     }
 }
 
+#[derive(derive_new::new)]
 pub struct TagRepositoryImpl {
     db: ConnectionPool,
 }
@@ -45,7 +46,7 @@ impl TagRepository for TagRepositoryImpl {
         let GetTagQuery { .. } = query;
 
         let rows =
-            sqlx::query_as::<_, TagRow>(r#"SELECT * FROM tags LIMIT $1 OFFSET $2 ORDER BY id"#)
+            sqlx::query_as::<_, TagRow>(r#"SELECT * FROM tags ORDER BY id LIMIT $1 OFFSET $2 "#)
                 .bind(query.limit)
                 .bind(query.offset)
                 .fetch_all(self.db.inner_ref())
@@ -66,10 +67,7 @@ impl TagRepository for TagRepositoryImpl {
             r#"
                 WITH inserted AS (
                     INSERT INTO tags 
-                        (
-                            name,
-                            description,
-                        )
+                        (name, description)
                     VALUES
                         ($1, $2)
                     RETURNING

@@ -73,8 +73,8 @@ impl UserRepository for UserRepositoryImpl {
                     role.description AS role_description,
                     role.is_super_administrator AS role_is_super_administrator
                 FROM users
-                JOIN role
-                ON users.role_id = role.id
+                JOIN
+                    role ON users.role_id = role.id
                 LIMIT $1
                 OFFSET $2
             "#,
@@ -96,8 +96,8 @@ impl UserRepository for UserRepositoryImpl {
                     role.description AS role_description,
                     role.is_super_administrator AS role_is_super_administrator
                 FROM users
-                JOIN role
-                ON users.role_id = role.id
+                JOIN
+                    role ON users.role_id = role.id
                 WHERE user.id = $1
             "#,
         )
@@ -137,9 +137,7 @@ impl UserRepository for UserRepositoryImpl {
                 FROM
                     inserted
                 JOIN
-                    role
-                ON
-                    inserted.role_id = role.id
+                    role ON inserted.role_id = role.id
             "#,
         )
         .bind(name)
@@ -198,9 +196,7 @@ impl UserRepository for UserRepositoryImpl {
                 FROM
                     updated
                 JOIN
-                    role
-                ON
-                    role.id = updated.role_id
+                    role ON role.id = updated.role_id
             ",
         );
 
