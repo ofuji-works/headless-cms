@@ -29,7 +29,7 @@ pub struct UpdateUser {
 }
 
 #[async_trait::async_trait]
-pub trait UserRepository {
+pub trait UserRepository: Send + Sync {
     async fn get(&self, query: GetUserQuery) -> anyhow::Result<Vec<User>>;
     async fn find(&self, id: String) -> anyhow::Result<User>;
     async fn create(&self, create_user: CreateUser) -> anyhow::Result<User>;
