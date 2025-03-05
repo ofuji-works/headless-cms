@@ -43,7 +43,7 @@ impl Category {
 
         if let Some(desc) = &description {
             if desc.len() > 500 {
-                bail!("The maximum allowed length is 50 characters.");
+                bail!("The maximum allowed length is 500 characters.");
             }
         }
 

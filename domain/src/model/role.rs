@@ -19,7 +19,7 @@ impl Role {
 
         if let Some(desc) = &description {
             if desc.len() > 500 {
-                anyhow::bail!("The maximum allowed length is 50 characters.");
+                anyhow::bail!("The maximum allowed length is 500 characters.");
             }
         }
 
