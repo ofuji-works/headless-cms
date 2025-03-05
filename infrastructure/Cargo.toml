@@ -15,4 +15,4 @@ sqlx = { version = "0.8.2", features = ["runtime-tokio", "uuid", "chrono", "macr
 serde_json.workspace = true
 domain.workspace = true
 shared.workspace = true
-
+uuid.workspace = true

@@ -31,7 +31,8 @@ use crate::handler;
         handler::content::GetContentQuery,
         handler::content::CreateContentJson,
         handler::content::UpdateContentJson,
-        handler::tag::Tag,
+
+        domain::model::tag::Tag,
         handler::tag::GetTagQuery,
         handler::tag::CreateTagJson,
         handler::tag::UpdateTagJson,

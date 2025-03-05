@@ -1,12 +1,6 @@
-use super::error::AppResult;
+use domain::model::tag::Tag;
 
-#[derive(utoipa::ToSchema)]
-pub struct Tag {
-    pub id: String,
-    pub name: String,
-    pub created_at: String,
-    pub updated_at: String,
-}
+use crate::handler::error::AppResult;
 
 #[derive(utoipa::IntoParams, utoipa::ToSchema)]
 pub struct GetTagQuery {
