@@ -122,8 +122,16 @@ impl ContentRepository for ContentRepositoryImpl {
                     created_by.name AS created_by_name,
                     updated_by.id AS updated_by_id,
                     updated_by.name AS updated_by_name,
-                    COALESCE(json_agg(json_build_object('id', tags.id, 'name', tags.name)) 
-                        FILTER (WHERE tags.id IS NOT NULL), '[]'::json) AS tags
+                    (
+                        SELECT
+                            json_agg(json_build_object('id', tags.id, 'name', tags.name))
+                        FROM
+                            tags
+                        JOIN
+                            content_tags ON content_tags.tag_id = tags.id
+                        WHERE
+                            content_tags.content_id = contents.id
+                    ) AS tags
                 FROM
                     contents 
                 JOIN
@@ -132,28 +140,7 @@ impl ContentRepository for ContentRepositoryImpl {
                     users AS created_by ON created_by.id = contents.created_by
                 JOIN
                     users AS updated_by ON updated_by.id = contents.updated_by
-                JOIN
-                    content_tags ON contents.id = content_tags.content_id
-                JOIN
-                    tags ON tags.id = content_tags.tag_id
-                GROUP BY
-                    contents.id,
-                    contents.fields,
-                    contents.status,
-                    contents.category_id,
-                    contents.published_at,
-                    contents.created_at,
-                    contents.updated_at,
-                    contents.created_by,
-                    contents.updated_by,
-                    category.name,
-                    category.api_identifier,
-                    category.description,
-                    created_by.id,
-                    created_by.name,
-                    updated_by.id,
-                    updated_by.name
-                ORDER BY
+               ORDER BY
                     contents.created_at DESC
             "#,
         )
@@ -219,8 +206,16 @@ impl ContentRepository for ContentRepositoryImpl {
                     created_by.name AS created_by_name,
                     updated_by.id AS updated_by_id,
                     updated_by.name AS updated_by_name,
-                    COALESCE(json_agg(json_build_object('id', tags.id, 'name', tags.name)) 
-                        FILTER (WHERE tags.id IS NOT NULL), '[]'::json) AS tags
+                    (
+                        SELECT
+                            json_agg(json_build_object('id', tags.id, 'name', tags.name))
+                        FROM
+                            tags
+                        JOIN
+                            content_tags ON content_tags.tag_id = tags.id
+                        WHERE
+                            content_tags.content_id = contents.id
+                    ) AS tags
                 FROM
                     inserted
                 JOIN
@@ -229,28 +224,7 @@ impl ContentRepository for ContentRepositoryImpl {
                     users AS created_by ON created_by.id = inserted.created_by
                 JOIN
                     users AS updated_by ON updated_by.id = inserted.updated_by
-                JOIN
-                    inserted_tags ON inserted.id = inserted_tags.content_id
-                JOIN
-                    tags ON tags.id = inserted_tags.tag_id
-                GROUP BY
-                    inserted.id,
-                    inserted.fields,
-                    inserted.status,
-                    inserted.category_id,
-                    inserted.published_at,
-                    inserted.created_at,
-                    inserted.updated_at,
-                    inserted.created_by,
-                    inserted.updated_by,
-                    category.name,
-                    category.api_identifier,
-                    category.description,
-                    created_by.id,
-                    created_by.name,
-                    updated_by.id,
-                    updated_by.name
-            "#,
+           "#,
         )
         .bind(category_id)
         .bind(fields)
@@ -313,8 +287,16 @@ impl ContentRepository for ContentRepositoryImpl {
                     created_by.name AS created_by_name,
                     updated_by.id AS updated_by_id,
                     updated_by.name AS updated_by_name,
-                    COALESCE(json_agg(json_build_object('id', tags.id, 'name', tags.name)) 
-                        FILTER (WHERE tags.id IS NOT NULL), '[]'::json) AS tags
+                    (
+                        SELECT
+                            json_agg(json_build_object('id', tags.id, 'name', tags.name))
+                        FROM
+                            tags
+                        JOIN
+                            content_tags ON content_tags.tag_id = tags.id
+                        WHERE
+                            content_tags.content_id = contents.id
+                    ) AS tags
                 FROM
                     updated
                 JOIN
@@ -323,27 +305,6 @@ impl ContentRepository for ContentRepositoryImpl {
                     users AS created_by ON created_by.id = updated.created_by
                 JOIN
                     users AS updated_by ON updated_by.id = updated.updated_by
-                JOIN
-                    content_tags ON updated.id = content_tags.content_id
-                JOIN
-                    tags ON tags.id = content_tags.tag_id
-                GROUP BY
-                    updated.id,
-                    updated.fields,
-                    updated.status,
-                    updated.category_id,
-                    updated.published_at,
-                    updated.created_at,
-                    updated.updated_at,
-                    updated.created_by,
-                    updated.updated_by,
-                    category.name,
-                    category.api_identifier,
-                    category.description,
-                    created_by.id,
-                    created_by.name,
-                    updated_by.id,
-                    updated_by.name
             ",
         );
 
