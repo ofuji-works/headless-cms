@@ -55,15 +55,11 @@ pub struct CreateCategoryJson {
 impl From<CreateCategoryJson> for CreateCategoryInput {
     fn from(json: CreateCategoryJson) -> Self {
         let CreateCategoryJson {name, api_identifier, description} = json;
-        let created_by_id: String = "id".into();
-        let updated_by_id: String = "id".into();
 
         Self {
             name,
             api_identifier,
             description,
-            created_by_id,
-            updated_by_id,
         }
     }
 }
@@ -124,8 +120,7 @@ pub async fn update_category(
         description,
     } = category;
 
-    let mock_id: String = "id".into();
-    let input = UpdateCategoryInput::new(id, name, api_identifier, description, mock_id);
+    let input = UpdateCategoryInput::new(id, name, api_identifier, description);
     let result = usecase.update(input).await;
 
     if result.is_ok() {

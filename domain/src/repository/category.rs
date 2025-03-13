@@ -5,8 +5,6 @@ pub struct CreateCategory {
     pub name: String,
     pub api_identifier: String,
     pub description: Option<String>,
-    pub created_by_id: String,
-    pub updated_by_id: String,
 }
 
 #[derive(Debug, serde::Deserialize, derive_new::new, utoipa::IntoParams, utoipa::ToSchema)]
@@ -15,7 +13,6 @@ pub struct UpdateCategory {
     pub name: Option<String>,
     pub api_identifier: Option<String>,
     pub description: Option<String>,
-    pub updated_by_id: String,
 }
 
 #[mockall::automock]

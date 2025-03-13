@@ -17,9 +17,7 @@ DROP TABLE IF EXISTS contents;
 DROP TYPE content_status;
 
 -- category table
-ALTER TABLE IF EXISTS category DROP CONSTRAINT category_created_by_fkey;
-ALTER TABLE IF EXISTS category DROP CONSTRAINT category_updated_by_fkey;
-DROP TRIGGER IF EXISTS category_updated_trigger ON content_model;
+DROP TRIGGER IF EXISTS category_updated_trigger ON category;
 DROP TABLE IF EXISTS category;
 
 -- role_authorities table

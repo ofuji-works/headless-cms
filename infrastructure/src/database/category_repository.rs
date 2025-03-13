@@ -2,7 +2,7 @@ use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
 use std::str::FromStr;
 
-use domain::model::category::{Category, CreatedBy, UpdatedBy};
+use domain::model::category::Category;
 use domain::repository::category::{CategoryRepository, CreateCategory, UpdateCategory};
 
 use crate::database::connection::ConnectionPool;
@@ -13,10 +13,6 @@ struct CategoryRow {
     pub name: String,
     pub api_identifier: String,
     pub description: String,
-    pub created_by_id: Uuid,
-    pub created_by_name: String,
-    pub updated_by_id: Uuid,
-    pub updated_by_name: String,
     #[sqlx(skip)]
     #[allow(unused)]
     pub created_at: DateTime<Utc>,
@@ -34,23 +30,14 @@ impl TryFrom<CategoryRow> for Category {
             name,
             api_identifier,
             description,
-            created_by_id,
-            created_by_name,
-            updated_by_id,
-            updated_by_name,
             ..
         } = row;
-
-        let created_by = CreatedBy::new(created_by_id.into(), created_by_name);
-        let updated_by = UpdatedBy::new(updated_by_id.into(), updated_by_name);
 
         Ok(Self {
             id: id.into(),
             name,
             api_identifier,
             description: Some(description),
-            created_by,
-            updated_by,
         })
     }
 }
@@ -63,23 +50,9 @@ pub struct CategoryRepositoryImpl {
 #[async_trait::async_trait]
 impl CategoryRepository for CategoryRepositoryImpl {
     async fn get(&self) -> anyhow::Result<Vec<Category>> {
-        let rows: Vec<CategoryRow> = sqlx::query_as::<_, CategoryRow>(
-            r#"
-                SELECT
-                    category.*,
-                    created_by.id AS created_by_id,
-                    created_by.name AS created_by_name,
-                    updated_by.id AS updated_by_id,
-                    updated_by.name AS updated_by_name
-                FROM category 
-                JOIN
-                    users AS created_by ON created_by.id = category.created_by
-                JOIN
-                    users AS updated_by ON updated_by.id = category.updated_by
-            "#,
-        )
-        .fetch_all(self.db.inner_ref())
-        .await?;
+        let rows: Vec<CategoryRow> = sqlx::query_as::<_, CategoryRow>(r#"SELECT * FROM category"#)
+            .fetch_all(self.db.inner_ref())
+            .await?;
 
         rows.into_iter().map(Category::try_from).collect()
     }
@@ -89,50 +62,29 @@ impl CategoryRepository for CategoryRepositoryImpl {
             name,
             api_identifier,
             description,
-            created_by_id,
-            updated_by_id,
         } = data;
 
         let description = match description {
             Some(str) => str,
             None => "".into(),
         };
-        let created_by = Uuid::from_str(&created_by_id)?;
-        let updated_by = Uuid::from_str(&updated_by_id)?;
 
         let category_row = sqlx::query_as::<_, CategoryRow>(
             r#"
-                WITH inserted AS (
-                    INSERT INTO
-                        category (
-                            name,
-                            api_identifier,
-                            description,
-                            created_by,
-                            updated_by
-                        )
-                    VALUES($1, $2, $3, $4, $5)
-                    RETURNING
-                        category.*
-                )
-                SELECT
-                    inserted.*,
-                    created_by.id AS created_by_id,
-                    created_by.name AS created_by_name,
-                    updated_by.id AS updated_by_id,
-                    updated_by.name AS updated_by_name
-                FROM inserted 
-                JOIN
-                    users AS created_by ON created_by.id = inserted.created_by
-                JOIN
-                    users AS updated_by ON updated_by.id = inserted.updated_by
+                INSERT INTO
+                    category (
+                        name,
+                        api_identifier,
+                        description
+                    )
+                VALUES ($1, $2, $3)
+                RETURNING
+                    *
             "#,
         )
         .bind(name)
         .bind(api_identifier)
         .bind(description)
-        .bind(created_by)
-        .bind(updated_by)
         .fetch_one(self.db.inner_ref())
         .await?;
 
@@ -145,15 +97,9 @@ impl CategoryRepository for CategoryRepositoryImpl {
             name,
             api_identifier,
             description,
-            updated_by_id,
         } = data;
 
-        let mut query_builder = sqlx::QueryBuilder::<sqlx::Postgres>::new(
-            "
-                WITH updated AS (
-                    UPDATE category SET
-            ",
-        );
+        let mut query_builder = sqlx::QueryBuilder::<sqlx::Postgres>::new("UPDATE category SET ");
         let mut separated = query_builder.separated(",");
 
         if let Some(name) = name {
@@ -171,32 +117,11 @@ impl CategoryRepository for CategoryRepositoryImpl {
             separated.push_bind_unseparated(description);
         }
 
-        let parsed_updated_by = Uuid::parse_str(&updated_by_id)?;
-        separated.push("updated_by = ");
-        separated.push_bind_unseparated(parsed_updated_by);
-
         let category_id = Uuid::from_str(&id)?;
         query_builder.push(" WHERE id = ");
         query_builder.push_bind(category_id);
 
-        query_builder.push(
-            "
-                    RETURNING *
-                )
-                SELECT
-                    updated.*,
-                    created_by.id AS created_by_id, 
-                    created_by.name AS created_by_name, 
-                    updated_by.id AS updated_by_id, 
-                    updated_by.name AS updated_by_name
-                FROM
-                    updated
-                JOIN
-                    users AS created_by ON created_by.id = updated.created_by
-                JOIN
-                    users AS updated_by ON updated_by.id = updated.updated_by 
-            ",
-        );
+        query_builder.push(" RETURNING *");
 
         let category_row = query_builder
             .build_query_as::<CategoryRow>()

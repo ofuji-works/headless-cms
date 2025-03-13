@@ -1,4 +1,4 @@
-use crate::model::category::{Category, CreatedBy, UpdatedBy};
+use crate::model::category::Category;
 
 #[rstest::rstest]
 #[case::all_fill("a".to_string().repeat(50), "a".to_string().repeat(64), Some("a".to_string().repeat(500)))]
@@ -8,16 +8,7 @@ fn category_new_success(
     #[case] api_identifier: String,
     #[case] description: Option<String>,
 ) {
-    let created_by = CreatedBy::new("id".into(), "name".into());
-    let updated_by = UpdatedBy::new("id".into(), "name".into());
-    let result = Category::try_new(
-        "id".into(),
-        name,
-        api_identifier,
-        description,
-        created_by,
-        updated_by,
-    );
+    let result = Category::try_new("id".into(), name, api_identifier, description);
 
     assert_eq!(result.is_ok(), true);
 }
@@ -31,16 +22,7 @@ fn category_new_failure(
     #[case] api_identifier: String,
     #[case] description: Option<String>,
 ) {
-    let created_by = CreatedBy::new("id".into(), "name".into());
-    let updated_by = UpdatedBy::new("id".into(), "name".into());
-    let result = Category::try_new(
-        "id".into(),
-        name,
-        api_identifier,
-        description,
-        created_by,
-        updated_by,
-    );
+    let result = Category::try_new("id".into(), name, api_identifier, description);
 
     assert_eq!(result.is_err(), true);
 }
