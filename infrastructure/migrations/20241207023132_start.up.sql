@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $$
 $$ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS role (
-  id uuid primary key default gen_random_uuid(),
+  id UUID PRIMARY KEY NOT NULL,
   name VARCHAR(50) NOT NULL,
   description VARCHAR(500) NOT NULL,
   is_super_administrator boolean NOT NULL,
@@ -18,7 +18,7 @@ CREATE TRIGGER role_updated_at_trigger
   BEFORE UPDATE ON role FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE IF NOT EXISTS authority (
-  id uuid primary key default gen_random_uuid(),
+  id UUID PRIMARY KEY NOT NULL,
   name VARCHAR(50) NOT NULL,
   key VARCHAR(50) NOT NULL UNIQUE,
   is_default boolean NOT NULL,
@@ -29,6 +29,7 @@ CREATE TRIGGER authority_updated_at_trigger
   BEFORE UPDATE ON authority FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE IF NOT EXISTS role_authorities(
+  id UUID PRIMARY KEY NOT NULL,
   role_id UUID NOT NULL,
   authority_id UUID NOT NULL,
   FOREIGN KEY (role_id) REFERENCES role(id)
@@ -37,11 +38,11 @@ CREATE TABLE IF NOT EXISTS role_authorities(
   FOREIGN KEY (authority_id) REFERENCES authority(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  PRIMARY KEY (role_id, authority_id)
+  UNIQUE (role_id, authority_id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
-  id uuid primary key default gen_random_uuid(),
+  id UUID PRIMARY KEY NOT NULL,
   name VARCHAR(50) NOT NULL,
   icon_url VARCHAR(500) NOT NULL,
   role_id UUID NOT NULL,
@@ -57,7 +58,7 @@ CREATE TRIGGER users_updated_at_trigger
 CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at);
 
 CREATE TABLE IF NOT EXISTS category (
-  id uuid primary key default gen_random_uuid(),
+  id UUID PRIMARY KEY NOT NULL,
   name VARCHAR(50) NOT NULL,
   api_identifier VARCHAR(64) NOT NULL UNIQUE,
   description VARCHAR(500) NOT NULL,
@@ -69,7 +70,8 @@ CREATE TRIGGER category_updated_at_trigger
 
 CREATE TYPE content_status AS ENUM('Draft', 'Reserved', 'Published', 'Unpublished');
 CREATE TABLE IF NOT EXISTS contents (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY NOT NULL,
+  title VARCHAR(50) NOT NULL,
   category_id UUID NOT NULL,
   fields JSONB NOT NULL,
   status content_status NOT NULL, 
@@ -93,7 +95,7 @@ CREATE TRIGGER contents_updated_at_trigger
 CREATE INDEX IF NOT EXISTS idx_contents_status ON contents(status);
 
 CREATE TABLE IF NOT EXISTS tags (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY NOT NULL,
   name VARCHAR(50) NOT NULL,
   description VARCHAR(500) NOT NULL, 
   created_at TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -103,6 +105,7 @@ CREATE TRIGGER tags_updated_at_trigger
   BEFORE UPDATE ON tags FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE IF NOT EXISTS content_tags (
+  id UUID PRIMARY KEY NOT NULL,
   content_id UUID NOT NULL,
   tag_id UUID NOT NULL,
   FOREIGN KEY (content_id) REFERENCES contents(id)
@@ -111,7 +114,7 @@ CREATE TABLE IF NOT EXISTS content_tags (
   FOREIGN KEY (tag_id) REFERENCES tags(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  PRIMARY KEY (content_id, tag_id)
+  UNIQUE (content_id, tag_id)
 );
 CREATE INDEX IF NOT EXISTS idx_content_tags_tag_id ON content_tags(tag_id);
 
