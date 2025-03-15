@@ -1,24 +1,24 @@
-use sqlx::types::chrono::{DateTime, Utc};
-use sqlx::types::Uuid;
 use std::str::FromStr;
 
 use domain::model::category::Category;
-use domain::repository::category::{CategoryRepository, CreateCategory, UpdateCategory};
+use domain::repository::category::{
+    CategoryRepository, CreateCategory, GetCategoryQuery, UpdateCategory,
+};
 
 use crate::database::connection::ConnectionPool;
 
 #[derive(Debug, sqlx::FromRow)]
 struct CategoryRow {
-    pub id: Uuid,
+    pub id: uuid::Uuid,
     pub name: String,
     pub api_identifier: String,
     pub description: String,
     #[sqlx(skip)]
     #[allow(unused)]
-    pub created_at: DateTime<Utc>,
+    pub created_at: sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc>,
     #[sqlx(skip)]
     #[allow(unused)]
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc>,
 }
 
 impl TryFrom<CategoryRow> for Category {
@@ -49,10 +49,14 @@ pub struct CategoryRepositoryImpl {
 
 #[async_trait::async_trait]
 impl CategoryRepository for CategoryRepositoryImpl {
-    async fn get(&self) -> anyhow::Result<Vec<Category>> {
-        let rows: Vec<CategoryRow> = sqlx::query_as::<_, CategoryRow>(r#"SELECT * FROM category"#)
-            .fetch_all(self.db.inner_ref())
-            .await?;
+    async fn get(&self, query: GetCategoryQuery) -> anyhow::Result<Vec<Category>> {
+        let rows: Vec<CategoryRow> = sqlx::query_as::<_, CategoryRow>(
+            r#"SELECT * FROM category ORDER BY id LIMIT $1 OFFSET $2"#,
+        )
+        .bind(query.limit)
+        .bind(query.offset)
+        .fetch_all(self.db.inner_ref())
+        .await?;
 
         rows.into_iter().map(Category::try_from).collect()
     }
@@ -64,6 +68,8 @@ impl CategoryRepository for CategoryRepositoryImpl {
             description,
         } = data;
 
+        let id = uuid::Uuid::now_v7();
+
         let description = match description {
             Some(str) => str,
             None => "".into(),
@@ -73,15 +79,16 @@ impl CategoryRepository for CategoryRepositoryImpl {
             r#"
                 INSERT INTO
                     category (
+                        id,
                         name,
                         api_identifier,
                         description
                     )
-                VALUES ($1, $2, $3)
-                RETURNING
-                    *
+                VALUES ($1, $2, $3, $4)
+                RETURNING *
             "#,
         )
+        .bind(id)
         .bind(name)
         .bind(api_identifier)
         .bind(description)
@@ -117,7 +124,7 @@ impl CategoryRepository for CategoryRepositoryImpl {
             separated.push_bind_unseparated(description);
         }
 
-        let category_id = Uuid::from_str(&id)?;
+        let category_id = uuid::Uuid::from_str(&id)?;
         query_builder.push(" WHERE id = ");
         query_builder.push_bind(category_id);
 
@@ -132,7 +139,7 @@ impl CategoryRepository for CategoryRepositoryImpl {
     }
 
     async fn delete(&self, id: String) -> anyhow::Result<()> {
-        let category_id = Uuid::from_str(&id)?;
+        let category_id = uuid::Uuid::from_str(&id)?;
 
         sqlx::query(r#"DELETE FROM category WHERE id = $1"#)
             .bind(category_id)

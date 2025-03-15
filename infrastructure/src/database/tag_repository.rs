@@ -43,10 +43,8 @@ pub struct TagRepositoryImpl {
 #[async_trait::async_trait]
 impl TagRepository for TagRepositoryImpl {
     async fn get(&self, query: GetTagQuery) -> anyhow::Result<Vec<Tag>> {
-        let GetTagQuery { .. } = query;
-
         let rows =
-            sqlx::query_as::<_, TagRow>(r#"SELECT * FROM tags ORDER BY id LIMIT $1 OFFSET $2 "#)
+            sqlx::query_as::<_, TagRow>(r#"SELECT * FROM tags ORDER BY id LIMIT $1 OFFSET $2"#)
                 .bind(query.limit)
                 .bind(query.offset)
                 .fetch_all(self.db.inner_ref())
@@ -58,24 +56,16 @@ impl TagRepository for TagRepositoryImpl {
     async fn create(&self, tag: CreateTag) -> anyhow::Result<Tag> {
         let CreateTag { name, description } = tag;
 
+        let uuid = uuid::Uuid::now_v7();
         let description = match description {
             Some(str) => str,
             None => "".into(),
         };
 
         let row = sqlx::query_as::<_, TagRow>(
-            r#"
-                WITH inserted AS (
-                    INSERT INTO tags 
-                        (name, description)
-                    VALUES
-                        ($1, $2)
-                    RETURNING
-                        *
-                )
-                SELECT * FROM inserted
-            "#,
+            r#"INSERT INTO tags (id, name, description) VALUES ($1, $2, $3) RETURNING *"#,
         )
+        .bind(uuid)
         .bind(name)
         .bind(description)
         .fetch_one(self.db.inner_ref())
@@ -91,12 +81,8 @@ impl TagRepository for TagRepositoryImpl {
             description,
         } = tag;
 
-        let mut query_builder = sqlx::query_builder::QueryBuilder::<'_, sqlx::Postgres>::new(
-            "
-                WITH updated AS (
-                    UPDATE tags SET
-            ",
-        );
+        let mut query_builder =
+            sqlx::query_builder::QueryBuilder::<'_, sqlx::Postgres>::new("UPDATE tags SET ");
 
         let mut separated = query_builder.separated(",");
 
@@ -114,14 +100,7 @@ impl TagRepository for TagRepositoryImpl {
         query_builder.push(" WHERE id = ");
         query_builder.push_bind(uuid);
 
-        query_builder.push(
-            "
-                    RETURNING
-                        *
-                )
-                SELECT * FROM updated
-            ",
-        );
+        query_builder.push(" RETURNING *");
 
         let row = query_builder
             .build_query_as::<TagRow>()

@@ -29,7 +29,7 @@ CREATE TRIGGER authority_updated_at_trigger
   BEFORE UPDATE ON authority FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE IF NOT EXISTS role_authorities(
-  id UUID PRIMARY KEY NOT NULL,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   role_id UUID NOT NULL,
   authority_id UUID NOT NULL,
   FOREIGN KEY (role_id) REFERENCES role(id)
@@ -105,7 +105,7 @@ CREATE TRIGGER tags_updated_at_trigger
   BEFORE UPDATE ON tags FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE IF NOT EXISTS content_tags (
-  id UUID PRIMARY KEY NOT NULL,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   content_id UUID NOT NULL,
   tag_id UUID NOT NULL,
   FOREIGN KEY (content_id) REFERENCES contents(id)

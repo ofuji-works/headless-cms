@@ -1,7 +1,7 @@
 INSERT INTO
-  tags (name, description)
+  tags (id, name, description)
 VALUES 
-  ('tag1', 'tag1 tag'),
-  ('tag2', 'tag2 tag'),
-  ('tag3', 'tag3 tag'),
-  ('tag4', 'tag4 tag');
+  (gen_random_uuid(), 'tag1', 'tag1 tag'),
+  (gen_random_uuid(), 'tag2', 'tag2 tag'),
+  (gen_random_uuid(), 'tag3', 'tag3 tag'),
+  (gen_random_uuid(), 'tag4', 'tag4 tag');

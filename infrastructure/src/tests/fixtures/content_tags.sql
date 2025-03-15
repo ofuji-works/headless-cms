@@ -1,7 +1,8 @@
 INSERT INTO
   content_tags (content_id, tag_id)
-SELECT 
-    (SELECT id FROM contents LIMIT 1), id 
+SELECT
+  (SELECT id FROM contents LIMIT 1),
+  id 
 FROM
   tags 
 WHERE

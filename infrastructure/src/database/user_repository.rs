@@ -1,6 +1,3 @@
-use sqlx::types::chrono::{DateTime, Utc};
-use sqlx::types::Uuid;
-
 use domain::model::{role::Role, user::User};
 use domain::repository::user::{CreateUser, GetUserQuery, UpdateUser, UserRepository};
 
@@ -8,22 +5,22 @@ use crate::database::connection::ConnectionPool;
 
 #[derive(sqlx::FromRow)]
 pub struct UserRow {
-    id: Uuid,
+    id: uuid::Uuid,
     name: String,
     icon_url: String,
-    role_id: Uuid,
+    role_id: uuid::Uuid,
     role_name: String,
     role_description: Option<String>,
     role_is_super_administrator: bool,
     #[sqlx(skip)]
     #[allow(unused)]
-    deleted_at: DateTime<Utc>,
+    deleted_at: sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc>,
     #[sqlx(skip)]
     #[allow(unused)]
-    created_at: DateTime<Utc>,
+    created_at: sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc>,
     #[sqlx(skip)]
     #[allow(unused)]
-    updated_at: DateTime<Utc>,
+    updated_at: sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc>,
 }
 
 impl TryFrom<UserRow> for User {
@@ -115,17 +112,20 @@ impl UserRepository for UserRepositoryImpl {
             role_id,
         } = create_user;
 
+        let uuid = uuid::Uuid::now_v7();
+
         let row = sqlx::query_as::<_, UserRow>(
             r#"
                 WITH inserted AS (
                     INSERT INTO
                         users (
+                            id,
                             name,
                             icon_url,
                             role_id,
                         )
                     VALUES
-                        ($1, $2, $3)
+                        ($1, $2, $3, $4)
                     RETURNING
                         users.*
                 )
@@ -140,6 +140,7 @@ impl UserRepository for UserRepositoryImpl {
                     role ON inserted.role_id = role.id
             "#,
         )
+        .bind(uuid)
         .bind(name)
         .bind(icon_url)
         .bind(role_id)
@@ -180,7 +181,7 @@ impl UserRepository for UserRepositoryImpl {
             separated.push_bind_unseparated(role_id);
         }
 
-        let parsed_user_id = Uuid::parse_str(&id)?;
+        let parsed_user_id = uuid::Uuid::parse_str(&id)?;
         query_builder.push(" WHERE users.id = ");
         query_builder.push_bind(parsed_user_id);
 
@@ -209,7 +210,7 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     async fn delete(&self, id: String) -> anyhow::Result<()> {
-        let parsed_id = Uuid::parse_str(&id)?;
+        let parsed_id = uuid::Uuid::parse_str(&id)?;
 
         sqlx::query(r#"DELETE FROM users id = $1"#)
             .bind(parsed_id)

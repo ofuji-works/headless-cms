@@ -13,7 +13,7 @@ fn build_repository(pool: &sqlx::PgPool) -> TagRepositoryImpl {
 async fn get_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
 
-    let query = GetTagQuery::new(0, 10);
+    let query = GetTagQuery::new(10, 0);
 
     let result = repository.get(query).await;
 
@@ -39,7 +39,7 @@ async fn create_success(pool: sqlx::PgPool) {
 async fn update_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
 
-    let query = GetTagQuery::new(0, 10);
+    let query = GetTagQuery::new(10, 0);
     let rows = repository.get(query).await.unwrap();
     let row = rows.get(0).unwrap();
 
@@ -60,9 +60,11 @@ async fn update_success(pool: sqlx::PgPool) {
 async fn delete_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
 
-    let query = GetTagQuery::new(0, 10);
+    let query = GetTagQuery::new(10, 0);
     let rows = repository.get(query).await.unwrap();
     let row = rows.get(0).unwrap();
+
+    println!("tags: {:?}", row);
 
     let result = repository.delete(row.id.clone()).await;
 

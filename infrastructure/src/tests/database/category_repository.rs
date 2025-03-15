@@ -1,4 +1,6 @@
-use domain::repository::category::{CategoryRepository, CreateCategory, UpdateCategory};
+use domain::repository::category::{
+    CategoryRepository, CreateCategory, GetCategoryQuery, UpdateCategory,
+};
 
 use crate::database::category_repository::CategoryRepositoryImpl;
 use crate::database::connection::ConnectionPool;
@@ -12,7 +14,8 @@ fn build_repository(pool: &sqlx::PgPool) -> CategoryRepositoryImpl {
 #[sqlx::test(fixtures(path = "../fixtures", scripts("category")))]
 fn get_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
-    let result = repository.get().await;
+    let query = GetCategoryQuery::default();
+    let result = repository.get(query).await;
 
     assert_eq!(result.is_ok(), true);
 }
@@ -33,7 +36,8 @@ fn create_success(pool: sqlx::PgPool) {
 #[sqlx::test(fixtures(path = "../fixtures", scripts("category")))]
 fn update_success(pool: sqlx::PgPool) {
     let repo = build_repository(&pool);
-    let categories = repo.get().await.unwrap();
+    let query = GetCategoryQuery::default();
+    let categories = repo.get(query).await.unwrap();
     let category = categories.get(0).unwrap();
 
     let data = UpdateCategory::new(
@@ -50,7 +54,8 @@ fn update_success(pool: sqlx::PgPool) {
 #[sqlx::test(fixtures(path = "../fixtures", scripts("category")))]
 fn delete_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
-    let categories = repository.get().await.unwrap();
+    let query = GetCategoryQuery::default();
+    let categories = repository.get(query).await.unwrap();
     let category = categories.get(0).unwrap();
 
     let result = repository.delete(category.id.to_string()).await;

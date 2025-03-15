@@ -1,9 +1,18 @@
 use crate::model::tag::Tag;
 
-#[derive(derive_new::new)]
+#[derive(Debug, serde::Deserialize, derive_new::new, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct GetTagQuery {
-    pub offset: i32,
     pub limit: i32,
+    pub offset: i32,
+}
+
+impl Default for GetTagQuery {
+    fn default() -> Self {
+        Self {
+            limit: 100,
+            offset: 0,
+        }
+    }
 }
 
 #[derive(derive_new::new)]

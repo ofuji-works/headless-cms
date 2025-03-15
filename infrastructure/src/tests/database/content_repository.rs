@@ -2,8 +2,10 @@ use domain::model::category::Category;
 use domain::model::content::{ContentStatus, Field, FieldType};
 use domain::model::tag::Tag;
 use domain::model::user::User;
-use domain::repository::category::CategoryRepository;
-use domain::repository::content::{ContentRepository, CreateContent, UpdateContent};
+use domain::repository::category::{CategoryRepository, GetCategoryQuery};
+use domain::repository::content::{
+    ContentRepository, CreateContent, GetContentQuery, UpdateContent,
+};
 use domain::repository::tag::{GetTagQuery, TagRepository};
 use domain::repository::user::{GetUserQuery, UserRepository};
 
@@ -16,7 +18,7 @@ use crate::database::user_repository::UserRepositoryImpl;
 async fn get_user(pool: &sqlx::PgPool) -> User {
     let connection_pool = ConnectionPool::new(pool.clone());
     let repo = UserRepositoryImpl::new(connection_pool);
-    let query = GetUserQuery::new(0, 1);
+    let query = GetUserQuery::new(1, 0);
     let rows = repo.get(query).await.unwrap();
 
     rows.get(0).unwrap().clone()
@@ -25,7 +27,8 @@ async fn get_user(pool: &sqlx::PgPool) -> User {
 async fn get_category(pool: &sqlx::PgPool) -> Category {
     let connection_pool = ConnectionPool::new(pool.clone());
     let repo = CategoryRepositoryImpl::new(connection_pool);
-    let categories = repo.get().await.unwrap();
+    let query = GetCategoryQuery::default();
+    let categories = repo.get(query).await.unwrap();
 
     categories.get(0).unwrap().clone()
 }
@@ -33,7 +36,7 @@ async fn get_category(pool: &sqlx::PgPool) -> Category {
 async fn get_tags(pool: &sqlx::PgPool) -> Vec<Tag> {
     let connection_pool = ConnectionPool::new(pool.clone());
     let repo = TagRepositoryImpl::new(connection_pool);
-    let query = GetTagQuery::new(0, 10);
+    let query = GetTagQuery::default();
 
     repo.get(query).await.unwrap()
 }
@@ -50,7 +53,8 @@ fn build_repository(pool: &sqlx::PgPool) -> ContentRepositoryImpl {
 ))]
 fn get_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
-    let result = repository.get().await;
+    let query = GetContentQuery::default();
+    let result = repository.get(query).await;
 
     println!("{:?}", result);
 
@@ -71,6 +75,7 @@ fn create_success(pool: sqlx::PgPool) {
     let field = Field::new(FieldType::ShortText, "title".into());
     let fields = serde_json::to_value(vec![field]).unwrap();
     let create_content = CreateContent::new(
+        "title".into(),
         category.id.to_string(),
         fields,
         tag_ids,
@@ -92,11 +97,14 @@ fn create_success(pool: sqlx::PgPool) {
 fn update_success(pool: sqlx::PgPool) {
     let user = get_user(&pool).await;
     let repository = build_repository(&pool);
-    let contents = repository.get().await.unwrap();
+    let query = GetContentQuery::default();
+    let contents = repository.get(query).await.unwrap();
     let content = contents.get(0).unwrap();
 
     let update_content = UpdateContent::new(
         content.id.to_string(),
+        Some("changed".into()),
+        None,
         None,
         None,
         Some(ContentStatus::Reserved),
@@ -116,7 +124,8 @@ fn update_success(pool: sqlx::PgPool) {
 ))]
 fn delete_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
-    let contents = repository.get().await.unwrap();
+    let query = GetContentQuery::default();
+    let contents = repository.get(query).await.unwrap();
     let content = contents.get(0).unwrap();
 
     let result = repository.delete(content.id.clone()).await;

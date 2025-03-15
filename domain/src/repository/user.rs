@@ -2,15 +2,15 @@ use crate::model::user::User;
 
 #[derive(derive_new::new)]
 pub struct GetUserQuery {
-    pub offset: i32,
     pub limit: i32,
+    pub offset: i32,
 }
 
 impl Default for GetUserQuery {
     fn default() -> Self {
         Self {
-            offset: 0,
             limit: 100,
+            offset: 0,
         }
     }
 }

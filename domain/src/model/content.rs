@@ -15,14 +15,14 @@ pub struct Field {
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, derive_new::new, utoipa::ToSchema)]
 pub struct Categories {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, derive_new::new, utoipa::ToSchema)]
 pub struct Tags {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, derive_new::new, utoipa::ToSchema)]
@@ -35,19 +35,20 @@ pub enum ContentStatus {
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema, Clone, derive_new::new)]
 pub struct CreatedBy {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema, Clone, derive_new::new)]
 pub struct UpdatedBy {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, derive_new::new, utoipa::ToSchema)]
 pub struct Content {
     pub id: String,
+    pub title: String,
     pub categories: Categories,
     pub status: ContentStatus,
     pub fields: Vec<Field>,
