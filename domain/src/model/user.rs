@@ -10,6 +10,10 @@ pub struct User {
 
 impl User {
     pub fn try_new(id: String, name: String, icon_url: String, role: Role) -> anyhow::Result<Self> {
+        if name.len() < 1 {
+            anyhow::bail!("The minimum allowed length is 1 characters.");
+        }
+
         if name.len() > 50 {
             anyhow::bail!("The maximum allowed length is 50 characters.");
         }

@@ -13,6 +13,10 @@ impl Role {
         description: Option<String>,
         is_super_administrator: bool,
     ) -> anyhow::Result<Self> {
+        if name.len() < 1 {
+            anyhow::bail!("The minimum allowed length is 1 characters.");
+        }
+
         if name.len() > 50 {
             anyhow::bail!("The maximum allowed length is 50 characters.");
         }

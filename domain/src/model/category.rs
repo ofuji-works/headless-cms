@@ -1,8 +1,4 @@
-use anyhow::{bail, Result};
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
-
-#[derive(Debug, Deserialize, Serialize, ToSchema, Clone)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema, Clone)]
 pub struct Category {
     pub id: String,
     pub name: String,
@@ -16,18 +12,26 @@ impl Category {
         name: String,
         api_identifier: String,
         description: Option<String>,
-    ) -> Result<Self> {
+    ) -> anyhow::Result<Self> {
+        if name.len() < 1 {
+            anyhow::bail!("The minimum allowed length is 1 characters.");
+        }
+
         if name.len() > 50 {
-            bail!("The maximum allowed length is 50 characters.");
+            anyhow::bail!("The maximum allowed length is 50 characters.");
+        }
+
+        if api_identifier.len() < 1 {
+            anyhow::bail!("The minimum allowed length is 1 characters.");
         }
 
         if api_identifier.len() > 64 {
-            bail!("The maximum allowed length is 64 characters.");
+            anyhow::bail!("The maximum allowed length is 64 characters.");
         }
 
         if let Some(desc) = &description {
             if desc.len() > 500 {
-                bail!("The maximum allowed length is 500 characters.");
+                anyhow::bail!("The maximum allowed length is 500 characters.");
             }
         }
 
