@@ -1,5 +1,6 @@
 use shared::config::StorageConfig;
 
+#[derive(Debug)]
 pub struct StorageClient(aws_sdk_s3::Client);
 
 impl StorageClient {
@@ -8,7 +9,6 @@ impl StorageClient {
     }
 
     pub fn new(config: StorageConfig) -> Self {
-        tracing_subscriber::fmt::init();
         let credentials = aws_sdk_s3::config::Credentials::new(
             config.access_key,
             config.secret_key,

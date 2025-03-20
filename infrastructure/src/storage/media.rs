@@ -19,12 +19,13 @@ impl TryFrom<CreateBucketOutput> for Bucket {
     }
 }
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct MediaRepositoryImpl {
     client: StorageClient,
 }
 
 impl MediaRepositoryImpl {
+    #[tracing::instrument]
     pub async fn create_bucket(&self, bucket_name: String) -> anyhow::Result<Bucket> {
         let result = self
             .client
@@ -34,9 +35,12 @@ impl MediaRepositoryImpl {
             .send()
             .await?;
 
+        tracing::info!("{:?}", result);
+
         Bucket::try_from(result)
     }
 
+    #[tracing::instrument]
     pub async fn delete_bucket(&self, bucket: Bucket) -> anyhow::Result<()> {
         let result = self
             .client
@@ -47,8 +51,11 @@ impl MediaRepositoryImpl {
             .await;
 
         if result.is_err() {
+            tracing::error!("failed delete bucket");
             anyhow::bail!("failed delete bucket")
         }
+
+        tracing::info!("{:?}", result);
 
         Ok(())
     }

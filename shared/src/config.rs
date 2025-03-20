@@ -1,7 +1,7 @@
 use anyhow::Result;
 use derive_new::new;
 
-#[derive(new)]
+#[derive(new, Debug)]
 pub struct DatabaseConfig {
     pub host: String,
     pub port: u16,
@@ -10,7 +10,7 @@ pub struct DatabaseConfig {
     pub database: String,
 }
 
-#[derive(new)]
+#[derive(new, Debug)]
 pub struct StorageConfig {
     pub access_key: String,
     pub secret_key: String,
