@@ -5,7 +5,7 @@ use domain::repository::tag::{CreateTag, GetTagQuery, TagRepository, UpdateTag};
 
 use crate::database::connection::ConnectionPool;
 
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow, Debug)]
 pub struct TagRow {
     id: uuid::Uuid,
     name: String,
@@ -35,13 +35,14 @@ impl From<TagRow> for Tag {
     }
 }
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct TagRepositoryImpl {
     db: ConnectionPool,
 }
 
 #[async_trait::async_trait]
 impl TagRepository for TagRepositoryImpl {
+    #[tracing::instrument]
     async fn get(&self, query: GetTagQuery) -> anyhow::Result<Vec<Tag>> {
         let rows =
             sqlx::query_as::<_, TagRow>(r#"SELECT * FROM tags ORDER BY id LIMIT $1 OFFSET $2"#)
@@ -50,9 +51,12 @@ impl TagRepository for TagRepositoryImpl {
                 .fetch_all(self.db.inner_ref())
                 .await?;
 
+        tracing::info!("{:?}", rows);
+
         Ok(rows.into_iter().map(Tag::from).collect())
     }
 
+    #[tracing::instrument]
     async fn create(&self, tag: CreateTag) -> anyhow::Result<Tag> {
         let CreateTag { name, description } = tag;
 
@@ -71,9 +75,12 @@ impl TagRepository for TagRepositoryImpl {
         .fetch_one(self.db.inner_ref())
         .await?;
 
+        tracing::info!("{:?}", row);
+
         Ok(Tag::from(row))
     }
 
+    #[tracing::instrument]
     async fn update(&self, tag: UpdateTag) -> anyhow::Result<Tag> {
         let UpdateTag {
             id,
@@ -102,10 +109,14 @@ impl TagRepository for TagRepositoryImpl {
 
         query_builder.push(" RETURNING *");
 
+        tracing::info!("{:?}", query_builder.sql());
+
         let row = query_builder
             .build_query_as::<TagRow>()
             .fetch_one(self.db.inner_ref())
             .await?;
+
+        tracing::info!("{:?}", row);
 
         Ok(Tag::from(row))
     }
@@ -113,10 +124,12 @@ impl TagRepository for TagRepositoryImpl {
     async fn delete(&self, id: String) -> anyhow::Result<()> {
         let uuid = uuid::Uuid::from_str(&id)?;
 
-        sqlx::query(r#"DELETE FROM tags WHERE id = $1"#)
+        let result = sqlx::query(r#"DELETE FROM tags WHERE id = $1"#)
             .bind(uuid)
             .execute(self.db.inner_ref())
             .await?;
+
+        tracing::info!("{:?}", result);
 
         Ok(())
     }

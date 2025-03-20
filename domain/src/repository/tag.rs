@@ -15,13 +15,13 @@ impl Default for GetTagQuery {
     }
 }
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct CreateTag {
     pub name: String,
     pub description: Option<String>,
 }
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct UpdateTag {
     pub id: String,
     pub name: Option<String>,

@@ -3,7 +3,7 @@ use domain::repository::user::{CreateUser, GetUserQuery, UpdateUser, UserReposit
 
 use crate::database::connection::ConnectionPool;
 
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow, Debug)]
 pub struct UserRow {
     id: uuid::Uuid,
     name: String,
@@ -54,13 +54,14 @@ impl TryFrom<UserRow> for User {
     }
 }
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct UserRepositoryImpl {
     db: ConnectionPool,
 }
 
 #[async_trait::async_trait]
 impl UserRepository for UserRepositoryImpl {
+    #[tracing::instrument]
     async fn get(&self, query: GetUserQuery) -> anyhow::Result<Vec<User>> {
         let rows = sqlx::query_as::<_, UserRow>(
             r#"
@@ -81,9 +82,12 @@ impl UserRepository for UserRepositoryImpl {
         .fetch_all(self.db.inner_ref())
         .await?;
 
+        tracing::info!("{:?}", rows);
+
         rows.into_iter().map(User::try_from).collect()
     }
 
+    #[tracing::instrument]
     async fn find(&self, id: String) -> anyhow::Result<User> {
         let row = sqlx::query_as::<_, UserRow>(
             r#"
@@ -102,9 +106,12 @@ impl UserRepository for UserRepositoryImpl {
         .fetch_one(self.db.inner_ref())
         .await?;
 
+        tracing::info!("{:?}", row);
+
         User::try_from(row)
     }
 
+    #[tracing::instrument]
     async fn create(&self, create_user: CreateUser) -> anyhow::Result<User> {
         let CreateUser {
             name,
@@ -147,9 +154,12 @@ impl UserRepository for UserRepositoryImpl {
         .fetch_one(self.db.inner_ref())
         .await?;
 
+        tracing::info!("{:?}", row);
+
         User::try_from(row)
     }
 
+    #[tracing::instrument]
     async fn update(&self, update_user: UpdateUser) -> anyhow::Result<User> {
         let UpdateUser {
             id,
@@ -201,21 +211,28 @@ impl UserRepository for UserRepositoryImpl {
             ",
         );
 
+        tracing::info!("{:?}", query_builder.sql());
+
         let row = query_builder
             .build_query_as::<UserRow>()
             .fetch_one(self.db.inner_ref())
             .await?;
 
+        tracing::info!("{:?}", row);
+
         User::try_from(row)
     }
 
+    #[tracing::instrument]
     async fn delete(&self, id: String) -> anyhow::Result<()> {
         let parsed_id = uuid::Uuid::parse_str(&id)?;
 
-        sqlx::query(r#"DELETE FROM users id = $1"#)
+        let result = sqlx::query(r#"DELETE FROM users id = $1"#)
             .bind(parsed_id)
             .execute(self.db.inner_ref())
             .await?;
+
+        tracing::info!("{:?}", result);
 
         Ok(())
     }

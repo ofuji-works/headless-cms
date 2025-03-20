@@ -21,10 +21,8 @@ struct CategoryRow {
     pub updated_at: sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc>,
 }
 
-impl TryFrom<CategoryRow> for Category {
-    type Error = anyhow::Error;
-
-    fn try_from(row: CategoryRow) -> anyhow::Result<Self> {
+impl From<CategoryRow> for Category {
+    fn from(row: CategoryRow) -> Self {
         let CategoryRow {
             id,
             name,
@@ -33,22 +31,23 @@ impl TryFrom<CategoryRow> for Category {
             ..
         } = row;
 
-        Ok(Self {
+        Self {
             id: id.into(),
             name,
             api_identifier,
             description: Some(description),
-        })
+        }
     }
 }
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct CategoryRepositoryImpl {
     db: ConnectionPool,
 }
 
 #[async_trait::async_trait]
 impl CategoryRepository for CategoryRepositoryImpl {
+    #[tracing::instrument]
     async fn get(&self, query: GetCategoryQuery) -> anyhow::Result<Vec<Category>> {
         let rows: Vec<CategoryRow> = sqlx::query_as::<_, CategoryRow>(
             r#"SELECT * FROM category ORDER BY id LIMIT $1 OFFSET $2"#,
@@ -58,9 +57,12 @@ impl CategoryRepository for CategoryRepositoryImpl {
         .fetch_all(self.db.inner_ref())
         .await?;
 
-        rows.into_iter().map(Category::try_from).collect()
+        tracing::info!("{:?}", rows);
+
+        Ok(rows.into_iter().map(Category::from).collect())
     }
 
+    #[tracing::instrument]
     async fn create(&self, data: CreateCategory) -> anyhow::Result<Category> {
         let CreateCategory {
             name,
@@ -95,9 +97,12 @@ impl CategoryRepository for CategoryRepositoryImpl {
         .fetch_one(self.db.inner_ref())
         .await?;
 
-        Category::try_from(category_row)
+        tracing::info!("{:?}", category_row);
+
+        Ok(Category::from(category_row))
     }
 
+    #[tracing::instrument]
     async fn update(&self, data: UpdateCategory) -> anyhow::Result<Category> {
         let UpdateCategory {
             id,
@@ -130,21 +135,28 @@ impl CategoryRepository for CategoryRepositoryImpl {
 
         query_builder.push(" RETURNING *");
 
+        tracing::info!("{:?}", query_builder.sql());
+
         let category_row = query_builder
             .build_query_as::<CategoryRow>()
             .fetch_one(self.db.inner_ref())
             .await?;
 
-        Category::try_from(category_row)
+        tracing::info!("{:?}", category_row);
+
+        Ok(Category::from(category_row))
     }
 
+    #[tracing::instrument]
     async fn delete(&self, id: String) -> anyhow::Result<()> {
         let category_id = uuid::Uuid::from_str(&id)?;
 
-        sqlx::query(r#"DELETE FROM category WHERE id = $1"#)
+        let result = sqlx::query(r#"DELETE FROM category WHERE id = $1"#)
             .bind(category_id)
             .execute(self.db.inner_ref())
             .await?;
+
+        tracing::info!("{:?}", result);
 
         Ok(())
     }

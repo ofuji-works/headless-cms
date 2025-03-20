@@ -9,7 +9,7 @@ fn make_pg_connect_options(cfg: DatabaseConfig) -> sqlx::postgres::PgConnectOpti
         .database(&cfg.database)
 }
 
-#[derive(Clone, derive_new::new)]
+#[derive(Clone, derive_new::new, Debug)]
 pub struct ConnectionPool(sqlx::PgPool);
 
 impl ConnectionPool {

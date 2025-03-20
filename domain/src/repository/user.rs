@@ -1,6 +1,6 @@
 use crate::model::user::User;
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct GetUserQuery {
     pub limit: i32,
     pub offset: i32,
@@ -15,12 +15,14 @@ impl Default for GetUserQuery {
     }
 }
 
+#[derive(derive_new::new, Debug)]
 pub struct CreateUser {
     pub name: String,
     pub icon_url: String,
     pub role_id: String,
 }
 
+#[derive(derive_new::new, Debug)]
 pub struct UpdateUser {
     pub id: String,
     pub name: Option<String>,

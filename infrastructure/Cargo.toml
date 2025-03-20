@@ -9,6 +9,7 @@ async-trait.workspace = true
 aws-sdk-s3.workspace = true
 derive-new.workspace = true
 rstest.workspace = true
+tracing.workspace = true
 tracing-subscriber.workspace = true
 tokio.workspace = true
 sqlx = { version = "0.8.2", features = ["runtime-tokio", "uuid", "chrono", "macros", "postgres", "migrate"] }

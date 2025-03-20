@@ -181,13 +181,14 @@ fn try_new_content(content_row: ContentRow, tag_rows: Vec<TagRow>) -> anyhow::Re
     })
 }
 
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct ContentRepositoryImpl {
     db: ConnectionPool,
 }
 
 #[async_trait::async_trait]
 impl ContentRepository for ContentRepositoryImpl {
+    #[tracing::instrument]
     async fn get(&self, query: GetContentQuery) -> anyhow::Result<Vec<Content>> {
         let rows = sqlx::query_as::<_, ContentsRow>(
             r#"
@@ -228,9 +229,12 @@ impl ContentRepository for ContentRepositoryImpl {
         .fetch_all(self.db.inner_ref())
         .await?;
 
+        tracing::info!("{:?}", rows);
+
         rows.into_iter().map(Content::try_from).collect()
     }
 
+    #[tracing::instrument]
     async fn create(&self, data: CreateContent) -> anyhow::Result<Content> {
         let CreateContent {
             title,
@@ -295,10 +299,14 @@ impl ContentRepository for ContentRepositoryImpl {
         .fetch_one(self.db.inner_ref())
         .await?;
 
-        sqlx::query(r#"DELETE FROM content_tags WHERE content_id = $1"#)
+        tracing::info!("{:?}", content_row);
+
+        let delete_content_tags = sqlx::query(r#"DELETE FROM content_tags WHERE content_id = $1"#)
             .bind(uuid)
             .execute(self.db.inner_ref())
             .await?;
+
+        tracing::info!("{:?}", delete_content_tags);
 
         let tag_rows = sqlx::query_as::<_, TagRow>(
             r#"
@@ -326,9 +334,12 @@ impl ContentRepository for ContentRepositoryImpl {
         .fetch_all(self.db.inner_ref())
         .await?;
 
+        tracing::info!("{:?}", tag_rows);
+
         try_new_content(content_row, tag_rows)
     }
 
+    #[tracing::instrument]
     async fn update(&self, data: UpdateContent) -> anyhow::Result<Content> {
         let UpdateContent {
             id,
@@ -402,10 +413,14 @@ impl ContentRepository for ContentRepositoryImpl {
             ",
         );
 
+        tracing::info!("{:?}", query_builder.sql());
+
         let content_row = query_builder
             .build_query_as::<ContentRow>()
             .fetch_one(&mut *transaction)
             .await?;
+
+        tracing::info!("{:?}", content_row);
 
         if let Some(tag_ids) = tag_ids {
             let tag_uuids: Vec<uuid::Uuid> = tag_ids
@@ -413,12 +428,15 @@ impl ContentRepository for ContentRepositoryImpl {
                 .map(|id| uuid::Uuid::from_str(&id))
                 .collect::<Result<Vec<_>, _>>()?;
 
-            sqlx::query(r#"DELETE FROM content_tags WHERE content_id = $1"#)
-                .bind(parsed_content_id)
-                .execute(&mut *transaction)
-                .await?;
+            let delete_content_tags =
+                sqlx::query(r#"DELETE FROM content_tags WHERE content_id = $1"#)
+                    .bind(parsed_content_id)
+                    .execute(&mut *transaction)
+                    .await?;
 
-            sqlx::query(
+            tracing::info!("{:?}", delete_content_tags);
+
+            let insert_content_tags = sqlx::query(
                 r#"
                     INSERT INTO
                         content_tags (content_id, tag_id)
@@ -433,6 +451,8 @@ impl ContentRepository for ContentRepositoryImpl {
             .bind(tag_uuids)
             .execute(&mut *transaction)
             .await?;
+
+            tracing::info!("{:?}", insert_content_tags);
         }
 
         let tag_rows = sqlx::query_as::<_, TagRow>(
@@ -451,16 +471,20 @@ impl ContentRepository for ContentRepositoryImpl {
         .fetch_all(&mut *transaction)
         .await?;
 
+        tracing::info!("{:?}", tag_rows);
+
         try_new_content(content_row, tag_rows)
     }
 
     async fn delete(&self, id: String) -> anyhow::Result<()> {
         let parsed_content_id = uuid::Uuid::parse_str(&id)?;
 
-        sqlx::query(r#"DELETE FROM contents WHERE id = $1"#)
+        let result = sqlx::query(r#"DELETE FROM contents WHERE id = $1"#)
             .bind(parsed_content_id)
             .execute(self.db.inner_ref())
             .await?;
+
+        tracing::info!("{:?}", result);
 
         Ok(())
     }
