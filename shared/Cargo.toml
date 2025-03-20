@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 anyhow.workspace = true
 derive-new.workspace = true
-
+tracing.workspace = true
+tracing-subscriber.workspace = true
