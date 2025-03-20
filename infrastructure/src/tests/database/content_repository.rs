@@ -8,6 +8,7 @@ use domain::repository::content::{
 };
 use domain::repository::tag::{GetTagQuery, TagRepository};
 use domain::repository::user::{GetUserQuery, UserRepository};
+use shared::logger::logger_init_info;
 
 use crate::database::category_repository::CategoryRepositoryImpl;
 use crate::database::connection::ConnectionPool;
@@ -47,29 +48,38 @@ fn build_repository(pool: &sqlx::PgPool) -> ContentRepositoryImpl {
     ContentRepositoryImpl::new(connection_pool)
 }
 
+#[tracing::instrument]
 #[sqlx::test(fixtures(
     path = "../fixtures",
     scripts("users", "content", "tags", "content_tags")
 ))]
 fn get_success(pool: sqlx::PgPool) {
+    logger_init_info();
     let repository = build_repository(&pool);
     let query = GetContentQuery::default();
     let result = repository.get(query).await;
 
-    println!("{:?}", result);
+    tracing::info!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }
 
+#[tracing::instrument]
 #[sqlx::test(fixtures(path = "../fixtures", scripts("users", "category", "tags")))]
 fn create_success(pool: sqlx::PgPool) {
+    logger_init_info();
     let user = get_user(&pool).await;
+    tracing::info!("{:?}", user);
+
     let category = get_category(&pool).await;
+    tracing::info!("{:?}", category);
+
     let tag_ids = get_tags(&pool)
         .await
         .iter()
         .map(|t| t.id.to_string())
         .collect::<Vec<_>>();
+    tracing::info!("{:?}", tag_ids);
 
     let content_repository = build_repository(&pool);
     let field = Field::new(FieldType::ShortText, "title".into());
@@ -85,21 +95,25 @@ fn create_success(pool: sqlx::PgPool) {
     );
     let result = content_repository.create(create_content).await;
 
-    println!("{:?}", result);
+    tracing::info!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }
 
+#[tracing::instrument]
 #[sqlx::test(fixtures(
     path = "../fixtures",
     scripts("users", "content", "tags", "content_tags")
 ))]
 fn update_success(pool: sqlx::PgPool) {
     let user = get_user(&pool).await;
+    tracing::info!("{:?}", user);
+
     let repository = build_repository(&pool);
     let query = GetContentQuery::default();
     let contents = repository.get(query).await.unwrap();
     let content = contents.get(0).unwrap();
+    tracing::info!("{:?}", content);
 
     let update_content = UpdateContent::new(
         content.id.to_string(),
@@ -113,11 +127,12 @@ fn update_success(pool: sqlx::PgPool) {
 
     let result = repository.update(update_content).await;
 
-    println!("{:?}", result);
+    tracing::info!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }
 
+#[tracing::instrument]
 #[sqlx::test(fixtures(
     path = "../fixtures",
     scripts("users", "content", "tags", "content_tags")
@@ -127,10 +142,11 @@ fn delete_success(pool: sqlx::PgPool) {
     let query = GetContentQuery::default();
     let contents = repository.get(query).await.unwrap();
     let content = contents.get(0).unwrap();
+    tracing::info!("{:?}", content);
 
     let result = repository.delete(content.id.clone()).await;
 
-    println!("{:?}", result);
+    tracing::info!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }

@@ -9,6 +9,7 @@ fn build_repository(pool: &sqlx::PgPool) -> TagRepositoryImpl {
     TagRepositoryImpl::new(connection_pool)
 }
 
+#[tracing::instrument]
 #[sqlx::test(fixtures(path = "../fixtures", scripts("tags")))]
 async fn get_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
@@ -17,11 +18,12 @@ async fn get_success(pool: sqlx::PgPool) {
 
     let result = repository.get(query).await;
 
-    println!("{:?}", result);
+    tracing::info!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }
 
+#[tracing::instrument]
 #[sqlx::test]
 async fn create_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
@@ -30,11 +32,12 @@ async fn create_success(pool: sqlx::PgPool) {
 
     let result = repository.create(tag).await;
 
-    println!("{:?}", result);
+    tracing::info!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }
 
+#[tracing::instrument]
 #[sqlx::test(fixtures(path = "../fixtures", scripts("tags")))]
 async fn update_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
@@ -42,6 +45,7 @@ async fn update_success(pool: sqlx::PgPool) {
     let query = GetTagQuery::new(10, 0);
     let rows = repository.get(query).await.unwrap();
     let row = rows.get(0).unwrap();
+    tracing::info!("{:?}", row);
 
     let tag = UpdateTag::new(
         row.id.clone(),
@@ -51,11 +55,12 @@ async fn update_success(pool: sqlx::PgPool) {
 
     let result = repository.update(tag).await;
 
-    println!("{:?}", result);
+    tracing::info!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }
 
+#[tracing::instrument]
 #[sqlx::test(fixtures(path = "../fixtures", scripts("tags")))]
 async fn delete_success(pool: sqlx::PgPool) {
     let repository = build_repository(&pool);
@@ -64,11 +69,11 @@ async fn delete_success(pool: sqlx::PgPool) {
     let rows = repository.get(query).await.unwrap();
     let row = rows.get(0).unwrap();
 
-    println!("tags: {:?}", row);
+    tracing::info!("{:?}", row);
 
     let result = repository.delete(row.id.clone()).await;
 
-    println!("{:?}", result);
+    tracing::info!("{:?}", result);
 
     assert_eq!(result.is_ok(), true);
 }
