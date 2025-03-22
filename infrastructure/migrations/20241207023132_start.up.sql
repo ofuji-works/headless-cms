@@ -6,41 +6,8 @@ CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $$
   END;
 $$ LANGUAGE plpgsql;
 
-CREATE TABLE IF NOT EXISTS role (
-  id UUID PRIMARY KEY NOT NULL,
-  name VARCHAR(50) NOT NULL,
-  description VARCHAR(500) NOT NULL,
-  is_super_administrator boolean NOT NULL,
-  created_at TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  updated_at TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
-);
-CREATE TRIGGER role_updated_at_trigger
-  BEFORE UPDATE ON role FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
-CREATE TABLE IF NOT EXISTS authority (
-  id UUID PRIMARY KEY NOT NULL,
-  name VARCHAR(50) NOT NULL,
-  key VARCHAR(50) NOT NULL UNIQUE,
-  is_default boolean NOT NULL,
-  created_at TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  updated_at TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
-);
-CREATE TRIGGER authority_updated_at_trigger
-  BEFORE UPDATE ON authority FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
-CREATE TABLE IF NOT EXISTS role_authorities(
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  role_id UUID NOT NULL,
-  authority_id UUID NOT NULL,
-  FOREIGN KEY (role_id) REFERENCES role(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  FOREIGN KEY (authority_id) REFERENCES authority(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  UNIQUE (role_id, authority_id)
-);
-
+-- users table
+CREATE TYPE roles AS ENUM('Admin', 'Member');
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY NOT NULL,
   name VARCHAR(50) NOT NULL,
@@ -57,7 +24,8 @@ CREATE TRIGGER users_updated_at_trigger
   BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at);
 
-CREATE TABLE IF NOT EXISTS category (
+-- categories table
+CREATE TABLE IF NOT EXISTS categories (
   id UUID PRIMARY KEY NOT NULL,
   name VARCHAR(50) NOT NULL,
   api_identifier VARCHAR(64) NOT NULL UNIQUE,
@@ -68,6 +36,7 @@ CREATE TABLE IF NOT EXISTS category (
 CREATE TRIGGER category_updated_at_trigger
   BEFORE UPDATE ON category FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- contents table
 CREATE TYPE content_status AS ENUM('Draft', 'Reserved', 'Published', 'Unpublished');
 CREATE TABLE IF NOT EXISTS contents (
   id UUID PRIMARY KEY NOT NULL,
@@ -94,6 +63,7 @@ CREATE TRIGGER contents_updated_at_trigger
   BEFORE UPDATE ON contents FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE INDEX IF NOT EXISTS idx_contents_status ON contents(status);
 
+-- tags table
 CREATE TABLE IF NOT EXISTS tags (
   id UUID PRIMARY KEY NOT NULL,
   name VARCHAR(50) NOT NULL,
@@ -104,6 +74,7 @@ CREATE TABLE IF NOT EXISTS tags (
 CREATE TRIGGER tags_updated_at_trigger
   BEFORE UPDATE ON tags FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- content_tags table
 CREATE TABLE IF NOT EXISTS content_tags (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   content_id UUID NOT NULL,
