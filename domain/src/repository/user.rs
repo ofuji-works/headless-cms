@@ -1,4 +1,4 @@
-use crate::model::user::User;
+use crate::model::user::{Role, User};
 
 #[derive(derive_new::new, Debug)]
 pub struct GetUserQuery {
@@ -31,10 +31,10 @@ pub struct UpdateUser {
 }
 
 #[async_trait::async_trait]
-pub trait UserRepository: Send + Sync {
-    async fn get(&self, query: GetUserQuery) -> anyhow::Result<Vec<User>>;
-    async fn find(&self, id: String) -> anyhow::Result<User>;
-    async fn create(&self, create_user: CreateUser) -> anyhow::Result<User>;
-    async fn update(&self, update_user: UpdateUser) -> anyhow::Result<User>;
+pub trait UserRepository<T: Role>: Send + Sync {
+    async fn get(&self, query: GetUserQuery) -> anyhow::Result<Vec<User<T>>>;
+    async fn find(&self, id: String) -> anyhow::Result<User<T>>;
+    async fn create(&self, create_user: CreateUser) -> anyhow::Result<User<T>>;
+    async fn update(&self, update_user: UpdateUser) -> anyhow::Result<User<T>>;
     async fn delete(&self, id: String) -> anyhow::Result<()>;
 }

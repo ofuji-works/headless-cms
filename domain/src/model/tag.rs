@@ -8,15 +8,15 @@ pub struct Tag {
 impl Tag {
     pub fn try_new(id: String, name: String, description: String) -> anyhow::Result<Self> {
         if name.len() < 1 {
-            anyhow::bail!("The minimum allowed length is 1 characters.");
+            anyhow::bail!("Name must be at least 1 character long");
         }
 
         if name.len() > 50 {
-            anyhow::bail!("The maximum allowed length is 50 characters.");
+            anyhow::bail!("Name exceeds maximum length(50 characters)");
         }
 
         if description.len() > 500 {
-            anyhow::bail!("The maximum allowed length is 500 characters.");
+            anyhow::bail!("Description exceeds maximum length(50 characters)");
         }
 
         Ok(Self {

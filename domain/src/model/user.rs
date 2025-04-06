@@ -1,32 +1,61 @@
-use crate::model::role::Role;
+pub trait Role {
+    fn permissions() -> std::collections::HashMap<&'static str, &'static str>;
+}
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema, Clone)]
-pub struct User {
+pub struct Admin;
+pub struct Member;
+
+type Authorities = std::collections::HashMap<&'static str, &'static str>;
+
+impl Role for Admin {
+    fn permissions() -> Authorities {
+        let mut permissions = std::collections::HashMap::new();
+        permissions.insert("contents", "get,find,create,update,delete");
+
+        permissions
+    }
+}
+impl Role for Member {
+    fn permissions() -> Authorities {
+        let mut permissions = std::collections::HashMap::new();
+        permissions.insert("contents", "get");
+
+        permissions
+    }
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, Clone)]
+pub struct User<T: Role> {
     pub id: String,
     pub name: String,
     pub icon_url: String,
-    pub role: Role,
+    #[serde(skip_deserializing)]
+    pub _role: std::marker::PhantomData<T>,
 }
 
-impl User {
-    pub fn try_new(id: String, name: String, icon_url: String, role: Role) -> anyhow::Result<Self> {
+impl<T: Role> User<T> {
+    pub fn try_new(id: String, name: String, icon_url: String) -> anyhow::Result<Self> {
         if name.len() < 1 {
-            anyhow::bail!("The minimum allowed length is 1 characters.");
+            anyhow::bail!("Name must be at least 1 character long");
         }
 
         if name.len() > 50 {
-            anyhow::bail!("The maximum allowed length is 50 characters.");
+            anyhow::bail!("Name exceeds maximum length(50 characters)");
         }
 
         if url::Url::parse(&icon_url).is_err() {
-            anyhow::bail!("Invalid URL.");
+            anyhow::bail!("Icon URL is invalid URL.");
         }
 
         Ok(Self {
             id,
             name,
             icon_url,
-            role,
+            _role: std::marker::PhantomData,
         })
+    }
+
+    pub fn permissions(&self) -> Authorities {
+        T::permissions()
     }
 }

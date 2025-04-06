@@ -1,6 +1,6 @@
 use crate::model::category::Category;
 
-#[derive(Debug, serde::Deserialize, derive_new::new, utoipa::IntoParams, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, derive_new::new)]
 pub struct GetCategoryQuery {
     pub limit: i32,
     pub offset: i32,
@@ -15,14 +15,14 @@ impl Default for GetCategoryQuery {
     }
 }
 
-#[derive(Debug, serde::Deserialize, derive_new::new, utoipa::IntoParams, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, derive_new::new)]
 pub struct CreateCategory {
     pub name: String,
     pub api_identifier: String,
     pub description: Option<String>,
 }
 
-#[derive(Debug, serde::Deserialize, derive_new::new, utoipa::IntoParams, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, derive_new::new)]
 pub struct UpdateCategory {
     pub id: String,
     pub name: Option<String>,

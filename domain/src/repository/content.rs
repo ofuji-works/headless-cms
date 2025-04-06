@@ -1,6 +1,6 @@
 use crate::model::content::{Content, ContentStatus};
 
-#[derive(Debug, serde::Deserialize, derive_new::new, utoipa::IntoParams, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, derive_new::new)]
 pub struct GetContentQuery {
     pub limit: i32,
     pub offset: i32,
@@ -15,7 +15,7 @@ impl Default for GetContentQuery {
     }
 }
 
-#[derive(Debug, serde::Deserialize, derive_new::new, utoipa::IntoParams, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, derive_new::new)]
 pub struct CreateContent {
     pub title: String,
     pub category_id: String,

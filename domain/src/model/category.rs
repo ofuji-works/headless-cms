@@ -14,24 +14,24 @@ impl Category {
         description: Option<String>,
     ) -> anyhow::Result<Self> {
         if name.len() < 1 {
-            anyhow::bail!("The minimum allowed length is 1 characters.");
+            anyhow::bail!("Name must be at least 1 character long");
         }
 
         if name.len() > 50 {
-            anyhow::bail!("The maximum allowed length is 50 characters.");
+            anyhow::bail!("Name exceeds maximum length(50 characters)");
         }
 
         if api_identifier.len() < 1 {
-            anyhow::bail!("The minimum allowed length is 1 characters.");
+            anyhow::bail!("Api identifier must be at least 1 character long");
         }
 
         if api_identifier.len() > 64 {
-            anyhow::bail!("The maximum allowed length is 64 characters.");
+            anyhow::bail!("Api identifier exceeds maximum length(64 characters)");
         }
 
         if let Some(desc) = &description {
             if desc.len() > 500 {
-                anyhow::bail!("The maximum allowed length is 500 characters.");
+                anyhow::bail!("Description exceeds maximum length(500 characters)");
             }
         }
 

@@ -1,6 +1,6 @@
 use crate::model::tag::Tag;
 
-#[derive(Debug, serde::Deserialize, derive_new::new, utoipa::IntoParams, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, derive_new::new)]
 pub struct GetTagQuery {
     pub limit: i32,
     pub offset: i32,

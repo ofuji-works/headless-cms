@@ -22,6 +22,7 @@ members = [
 anyhow = "1.0.93"
 async-trait = "0.1.83"
 aws-sdk-s3 = "1.74.0"
+chrono = { version = "0.4.40", features = ["serde"] }
 garde = "0.20.0"
 rstest = "0.23.0"
 tokio = { version = "1.41.1", features = ["full"] }
@@ -35,7 +36,7 @@ tracing-test = { version = "0.2.5", features = ["no-env-filter"] }
 thiserror = "2.0.7"
 utoipa = { version = "5.3.0", features = ["axum_extras"] }
 url = "2.5.4"
-uuid = { version = "1.15.1", features = ["v7"] }
+uuid = { version = "1.15.1", features = ["v7", "serde"] }
 application = { path = "./application" }
 domain = { path = "./domain" }
 infrastructure = { path = "./infrastructure" }
@@ -50,4 +51,3 @@ infrastructure.workspace = true
 interface.workspace = true
 shared.workspace = true
 registry.workspace = true
-
