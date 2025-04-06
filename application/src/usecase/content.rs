@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use domain::{
     model::content::Content,
-    repository::content::{ContentRepository, CreateContent, UpdateContent},
+    repository::content::{ContentRepository, CreateContent, GetContentQuery, UpdateContent},
 };
 
 #[derive(new)]
@@ -12,12 +12,13 @@ pub struct ContentUsecase {
     repository: Arc<dyn ContentRepository>,
 }
 
+pub type GetContentInput = GetContentQuery;
 pub type CreateContentInput = CreateContent;
 pub type UpdateContentInput = UpdateContent;
 
 impl ContentUsecase {
-    pub async fn get(&self) -> Result<Vec<Content>> {
-        self.repository.clone().get().await
+    pub async fn get(&self, input: GetContentInput) -> Result<Vec<Content>> {
+        self.repository.clone().get(input).await
     }
 
     pub async fn create(&self, input: CreateContentInput) -> Result<Content> {

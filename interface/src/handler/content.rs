@@ -3,38 +3,47 @@ use axum::{
     response::Json,
 };
 
-use application::usecase::content::{ContentUsecase, CreateContentInput, UpdateContentInput};
+use application::usecase::content::{
+    ContentUsecase, CreateContentInput, GetContentInput, UpdateContentInput,
+};
 use domain::model::content::{Content, ContentStatus};
 use registry::AppRegistry;
 
 use crate::handler::error::{AppError, AppResult};
 
 #[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
-pub struct GetContentQuery {
+pub struct GetContentRequest {
     #[param(example = 0)]
-    pub offset: usize,
+    pub offset: i32,
     #[param(example = 100)]
-    pub limit: usize,
+    pub limit: i32,
     pub keyword: Option<String>,
     pub category: Option<String>,
     pub tags: Option<Vec<String>>,
 }
 
+impl From<GetContentRequest> for GetContentInput {
+    fn from(value: GetContentRequest) -> Self {
+        let GetContentRequest { limit, offset, .. } = value;
+
+        Self { limit, offset }
+    }
+}
+
 #[utoipa::path(
     get,
     path = "/contents",
-    params(GetContentQuery),
+    params(GetContentRequest),
     responses((status = 200, description = "Get content success", body = [Content])),
     tag = "contents"
 )]
 pub async fn get_contents(
     State(registry): State<AppRegistry>,
-    Query(query): Query<GetContentQuery>,
+    Query(query): Query<GetContentRequest>,
 ) -> AppResult<Json<Vec<Content>>> {
-    let GetContentQuery { .. } = query;
-
     let usecase = ContentUsecase::new(registry.content_repository());
-    let result = usecase.get().await;
+    let input = GetContentInput::from(query);
+    let result = usecase.get(input).await;
 
     if let Ok(value) = result {
         return Ok(Json(value));
@@ -45,7 +54,9 @@ pub async fn get_contents(
 
 #[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct CreateContentJson {
+    pub title: String,
     pub fields: serde_json::Value,
+    pub tag_ids: Vec<String>,
     pub status: ContentStatus,
     pub category_id: String,
 }
@@ -53,7 +64,9 @@ pub struct CreateContentJson {
 impl From<CreateContentJson> for CreateContentInput {
     fn from(json: CreateContentJson) -> Self {
         let CreateContentJson {
+            title,
             fields,
+            tag_ids,
             status,
             category_id,
         } = json;
@@ -61,7 +74,9 @@ impl From<CreateContentJson> for CreateContentInput {
         let updated_by_id: String = "id".into();
 
         Self {
+            title,
             fields,
+            tag_ids,
             status,
             category_id,
             created_by_id,
@@ -99,6 +114,18 @@ pub struct UpdateContentJson {
     pub fields: Option<serde_json::Value>,
     pub status: Option<ContentStatus>,
     pub category_id: Option<String>,
+}
+
+impl From<UpdateContentJson> for UpdateContentInput {
+    fn from(value: UpdateContentJson) -> Self {
+        let UpdateContentJson {
+            fields,
+            status,
+            category_id,
+        } = value;
+
+        Self {}
+    }
 }
 
 #[utoipa::path(

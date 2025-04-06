@@ -4,7 +4,7 @@ use axum::{
 };
 
 use application::usecase::category::{
-    CategoryUsecase, CreateCategoryInput, UpdateCategoryInput,
+    CategoryUsecase, CreateCategoryInput, GetCategoryInput, UpdateCategoryInput
 };
 use domain::model::category::Category;
 use registry::AppRegistry;
@@ -14,9 +14,9 @@ use crate::handler::error::{AppError, AppResult};
 #[derive(serde::Deserialize, utoipa::IntoParams, utoipa::ToSchema)]
 pub struct GetCategoryQuery {
     #[param(example = 0)]
-    pub offset: usize,
+    pub offset: i32,
     #[param(example = 100)]
-    pub limit: usize,
+    pub limit: i32,
     pub keyword: Option<String>,
 }
 
@@ -33,9 +33,10 @@ pub async fn get_categories(
     State(registry): State<AppRegistry>,
     Query(query): Query<GetCategoryQuery>,
 ) -> AppResult<Json<Vec<Category>>> {
-    let GetCategoryQuery { .. } = query;
+    let GetCategoryQuery { offset, limit, .. } = query;
     let usecase = CategoryUsecase::new(registry.category_repository());
-    let result = usecase.get().await;
+    let input = GetCategoryInput::new(limit, offset);
+    let result = usecase.get(input).await;
 
     if let Ok(value) = result {
         return Ok(Json(value));

@@ -1,1 +1,1 @@
-pub mod content_model;
+pub mod category;

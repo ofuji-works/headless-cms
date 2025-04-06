@@ -4,9 +4,10 @@ use std::sync::Arc;
 
 use domain::{
     model::category::Category,
-    repository::category::{CategoryRepository, CreateCategory, UpdateCategory},
+    repository::category::{CategoryRepository, CreateCategory, GetCategoryQuery, UpdateCategory},
 };
 
+pub type GetCategoryInput = GetCategoryQuery;
 pub type CreateCategoryInput = CreateCategory;
 pub type UpdateCategoryInput = UpdateCategory;
 
@@ -16,8 +17,8 @@ pub struct CategoryUsecase {
 }
 
 impl CategoryUsecase {
-    pub async fn get(&self) -> Result<Vec<Category>> {
-        self.repository.clone().get().await
+    pub async fn get(&self, input: GetCategoryInput) -> Result<Vec<Category>> {
+        self.repository.clone().get(input).await
     }
 
     pub async fn create(&self, input: CreateCategoryInput) -> Result<Category> {

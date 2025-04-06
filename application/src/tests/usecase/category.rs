@@ -5,7 +5,7 @@ use domain::{
     repository::category::{CreateCategory, MockCategoryRepository, UpdateCategory},
 };
 
-use crate::usecase::category::CategoryUsecase;
+use crate::usecase::category::{CategoryUsecase, GetCategoryInput};
 
 #[rstest::fixture]
 fn category() -> Category {
@@ -17,9 +17,10 @@ fn category() -> Category {
 async fn get_success(category: Category) {
     let mut mock = MockCategoryRepository::new();
     mock.expect_get()
-        .returning(move || Ok(vec![category.clone()]));
+        .returning(move |_| Ok(vec![category.clone()]));
     let usecase = CategoryUsecase::new(Arc::new(mock));
-    let result = usecase.get().await;
+    let input = GetCategoryInput::default();
+    let result = usecase.get(input).await;
 
     assert_eq!(result.is_ok(), true);
 }
